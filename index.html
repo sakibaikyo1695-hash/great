@@ -1368,7 +1368,7 @@ textarea{resize:vertical;min-height:55px}
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end">
-        <button class="btn btn-blue" onclick="bfGoStep(bfSelectedAc==='OTHER'?5:2)" style="padding:8px 24px;font-family:var(--font-display);font-size:11px;letter-spacing:1px">NEXT →</button>
+        <button class="btn btn-blue" onclick="bfGoStep(window.bfSelectedAc==='OTHER'?5:2)" style="padding:8px 24px;font-family:var(--font-display);font-size:11px;letter-spacing:1px">NEXT →</button>
         <button class="btn btn-red" id="closeBriefBtn" style="padding:8px 20px;margin-left:8px">✖ CLOSE</button>
       </div>
     </div>
@@ -1632,7 +1632,7 @@ textarea{resize:vertical;min-height:55px}
       <div style="margin-top:8px"><label>NOTAM</label><textarea id="bf_notam" rows="3" placeholder="Enter relevant NOTAMs..."></textarea></div>
       <div style="margin-top:4px"><label>SPECIAL NOTE</label><textarea id="bf_special" rows="2" placeholder="Any special instructions..."></textarea></div>
       <div class="btn-row" style="margin-top:14px;justify-content:space-between">
-        <button class="btn" id="bfStep5BackBtn" onclick="bfGoStep(bfSelectedAc==='OTHER'?1:4)" style="padding:8px 20px">← BACK</button>
+        <button class="btn" id="bfStep5BackBtn" onclick="bfGoStep(window.bfSelectedAc==='OTHER'?1:4)" style="padding:8px 20px">← BACK</button>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-amber" id="doPrintBriefBtn" style="padding:10px 18px;font-family:var(--font-display);font-size:11px;letter-spacing:1px;font-weight:700">📋 PRE-FLIGHT BRIEF</button>
           <button class="btn btn-blue" id="doPilotCardBtn" style="padding:10px 18px;font-family:var(--font-display);font-size:11px;letter-spacing:1px;font-weight:700">✈️ PILOT CARD</button>
@@ -3396,8 +3396,8 @@ document.getElementById('importBtn').onclick=()=>{
     return 3810;
   }
 
-  let bfSelectedAc = '109E';
-  let bfCurrentStep = 1;
+  window.bfSelectedAc = '109E';
+  window.bfCurrentStep = 1;
   let bfFwdSeatFitted = true; // Fwd Seat is in basic weight by default
   window._bfData = {}; // shared state across steps
 
@@ -3448,7 +3448,7 @@ document.getElementById('importBtn').onclick=()=>{
 
   /* ---- Step navigation ---- */
   window.bfGoStep = function(step){
-    const isOther = bfSelectedAc==='OTHER';
+    const isOther = window.bfSelectedAc==='OTHER';
     // For OTHER aircraft, steps 2/3/4 are skipped
     const validSteps = isOther ? [1,5] : [1,2,3,4,5];
     [1,2,3,4,5].forEach(s=>{
@@ -3467,10 +3467,10 @@ document.getElementById('importBtn').onclick=()=>{
         }
       }
     });
-    bfCurrentStep = step;
+    window.bfCurrentStep = step;
     if(!isOther && step===3) bfBuildRoute();
     if(!isOther && step===4){
-      const _ac = bfSelectedAc==='109SP' ? AW109SP : AW109E;
+      const _ac = window.bfSelectedAc==='109SP' ? AW109SP : AW109E;
       const ft = window._bfData.fuelTaken || window._bfData.fuelRequired || 0;
       const ftTO = ft > 0 ? Math.max(0, Math.round(ft - _ac.STARTUP_FUEL)) : '';
       document.getElementById('cg_fuel_to').value = ftTO;
@@ -3482,7 +3482,7 @@ document.getElementById('importBtn').onclick=()=>{
 
   /* ---- Aircraft selector ---- */
   window.bfSelectAc = function(ac){
-    bfSelectedAc = ac;
+    window.bfSelectedAc = ac;
     const isSP = ac==='109SP';
     const isOther = ac==='OTHER';
     ['109E','109SP','OTHER'].forEach(a=>{
@@ -3547,7 +3547,7 @@ document.getElementById('importBtn').onclick=()=>{
 
   /* ---- STEP 2: Equipment / Weight ---- */
   window.bfWbUpdate = function(){
-    const isSP = bfSelectedAc === '109SP';
+    const isSP = window.bfSelectedAc === '109SP';
 
     if(isSP){
       // ── AW109SP ─────────────────────────────────────────────────────
@@ -3695,7 +3695,7 @@ document.getElementById('importBtn').onclick=()=>{
 
   /* ---- STEP 3: Route & Fuel ---- */
   window.bfBuildRoute = function(){
-    const ac = bfSelectedAc==='109SP' ? AW109SP : AW109E;
+    const ac = window.bfSelectedAc==='109SP' ? AW109SP : AW109E;
     const spd = n('bf_cruise_kts');
     const isReturn = document.getElementById('bf_flight_type').value === 'return';
     const routeDiv = document.getElementById('bfRouteDisplay');
@@ -3764,7 +3764,7 @@ document.getElementById('importBtn').onclick=()=>{
 
   window.bfFuelCalc = function(){
     if(!window._bfData.legs) { bfBuildRoute(); return; }
-    const ac = bfSelectedAc==='109SP' ? AW109SP : AW109E;
+    const ac = window.bfSelectedAc==='109SP' ? AW109SP : AW109E;
     const spd = n('bf_cruise_kts');
     const isReturn = document.getElementById('bf_flight_type').value === 'return';
 
@@ -3864,7 +3864,7 @@ document.getElementById('importBtn').onclick=()=>{
 
   /* ---- STEP 4: CG Calculation ---- */
   window.bfCgCalc = function(){
-    const isSP = bfSelectedAc==='109SP';
+    const isSP = window.bfSelectedAc==='109SP';
     const ac = isSP ? AW109SP : AW109E;
     const PILOT_ARM   = isSP ? ac.PILOT_ARM   : AW109E.PILOT_ARM;
     const COPILOT_ARM = isSP ? ac.COPILOT_ARM : AW109E.COPILOT_ARM;
@@ -4243,7 +4243,7 @@ document.getElementById('importBtn').onclick=()=>{
       .credit{font-size:6.5px;color:#777;letter-spacing:1px;margin-top:5px;border-top:1px solid #ccc;padding-top:4px;text-align:center}
       @media print{button{display:none!important}}
     </style></head><body>
-    <h1>PILOT CARD — ${bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</h1>
+    <h1>PILOT CARD — ${window.bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</h1>
     <div class="meta">${g('bf_callsign')} &nbsp;|&nbsp; ${g('bf_mission')} &nbsp;|&nbsp; ETD: ${g('bf_etd')} &nbsp;|&nbsp; ${dtStr}</div>
 
     <div class="g3">
@@ -4465,7 +4465,7 @@ document.getElementById('importBtn').onclick=()=>{
     const dtStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+
       '  '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'L';
     const d = window._bfData;
-    const ac = bfSelectedAc==='109SP' ? AW109SP : AW109E;
+    const ac = window.bfSelectedAc==='109SP' ? AW109SP : AW109E;
 
     // Route rows
     const spd = d.spd||0;
@@ -4559,13 +4559,13 @@ document.getElementById('importBtn').onclick=()=>{
       @media print{body{padding:8px}button{display:none!important}.no-break{page-break-inside:avoid}}
     </style></head><body>
     <h1>FLIGHT BRIEFING SHEET</h1>
-    <div class="meta">Generated: ${dtStr} &nbsp;|&nbsp; Aircraft: <b>${bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</b></div>
+    <div class="meta">Generated: ${dtStr} &nbsp;|&nbsp; Aircraft: <b>${window.bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</b></div>
 
     <h2>MISSION DETAILS</h2>
     <div class="grid3">
       <div class="cell"><div class="lbl">Callsign</div><div class="val">${g('bf_callsign')}</div></div>
       <div class="cell"><div class="lbl">Mission</div><div class="val">${g('bf_mission')}</div></div>
-      <div class="cell"><div class="lbl">Aircraft</div><div class="val">${bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</div></div>
+      <div class="cell"><div class="lbl">Aircraft</div><div class="val">${window.bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</div></div>
       <div class="cell"><div class="lbl">Pilot</div><div class="val">${g('bf_pilot')}</div></div>
       <div class="cell"><div class="lbl">Co-Pilot</div><div class="val">${g('bf_copilot')}</div></div>
       <div class="cell"><div class="lbl">Rear Crew</div><div class="val">${g('bf_rearcrew')}</div></div>
@@ -4591,8 +4591,8 @@ document.getElementById('importBtn').onclick=()=>{
       <div class="cell"><div class="lbl">Fuel Allowed</div><div class="val">${fmt0(d.fuelAllowed||0)} kg</div></div>
       <div class="cell"><div class="lbl">Fuel Taken</div><div class="val">${d.fuelTaken||'—'} kg</div></div>
       <div class="cell"><div class="lbl">Ramp Wt</div><div class="val">${fmt1((d.zfw||0)+(d.fuelTaken||0))} kg</div></div>
-      <div class="cell"><div class="lbl">Take-Off Wt (−30kg start)</div><div class="val" style="color:${((d.zfw||0)+(d.fuelTaken||0)-30)>(bfSelectedAc==='109SP'?AW109SP.MAX_AUW:AW109E.MAX_AUW)?'#cc0000':'inherit'};font-weight:700">${fmt1((d.zfw||0)+(d.fuelTaken||0)-30)} kg</div></div>
-      <div class="cell"><div class="lbl">Max AUW (T/O)</div><div class="val">${bfSelectedAc==="109SP"?AW109SP.MAX_AUW:AW109E.MAX_AUW} kg</div></div>
+      <div class="cell"><div class="lbl">Take-Off Wt (−30kg start)</div><div class="val" style="color:${((d.zfw||0)+(d.fuelTaken||0)-30)>(window.bfSelectedAc==='109SP'?AW109SP.MAX_AUW:AW109E.MAX_AUW)?'#cc0000':'inherit'};font-weight:700">${fmt1((d.zfw||0)+(d.fuelTaken||0)-30)} kg</div></div>
+      <div class="cell"><div class="lbl">Max AUW (T/O)</div><div class="val">${window.bfSelectedAc==="109SP"?AW109SP.MAX_AUW:AW109E.MAX_AUW} kg</div></div>
       <div class="cell"><div class="lbl">Endurance</div><div class="val">${d.endH||0}h ${String(d.endM||0).padStart(2,'0')}min</div></div>
       <div class="cell"><div class="lbl">Fuel Status</div><div class="val" style="color:${fuelStatusColor};font-weight:700">${(d.fuelTaken||0)>=(d.fuelRequired||0)?'SUFFICIENT':'INSUFFICIENT'}</div></div>
       <div class="cell"><div class="lbl">Addl PAX Possible</div><div class="val">${d.paxCapFuelTaken||'—'}</div></div>
@@ -4627,15 +4627,15 @@ document.getElementById('importBtn').onclick=()=>{
       <tbody>${routeRows}</tbody>
     </table>
 
-    <h2>CENTRE OF GRAVITY — ${bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</h2>
+    <h2>CENTRE OF GRAVITY — ${window.bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;align-items:start">
       <table style="margin:0;font-size:10px">
         <thead><tr><th style="text-align:left">Station</th><th>Wt (kg)</th><th>Arm (mm)</th><th>Moment</th></tr></thead>
         <tbody>
           <tr><td style="text-align:left">Equipped Empty</td><td>${fmt1(cg.equipArmWt||0)}</td><td>3542</td><td>${Math.round((cg.equipArmWt||0)*3542.261)}</td></tr>
-          <tr><td style="text-align:left">Pilot</td><td>${cg.pilot||75}</td><td>${bfSelectedAc==='109SP'?AW109SP.PILOT_ARM:AW109E.PILOT_ARM}</td><td>${Math.round((cg.pilot||75)*(bfSelectedAc==='109SP'?AW109SP.PILOT_ARM:AW109E.PILOT_ARM))}</td></tr>
-          <tr><td style="text-align:left">Co-Pilot / PAX</td><td>${cg.copilot||75}</td><td>${bfSelectedAc==='109SP'?AW109SP.COPILOT_ARM:AW109E.COPILOT_ARM}</td><td>${Math.round((cg.copilot||75)*(bfSelectedAc==='109SP'?AW109SP.COPILOT_ARM:AW109E.COPILOT_ARM))}</td></tr>
-          ${(()=>{const _fA=bfSelectedAc==='109SP'?AW109SP.FWD_CABIN_ARM:2455;const _aA=bfSelectedAc==='109SP'?AW109SP.AFT_CABIN_ARM:3200;const _bA=bfSelectedAc==='109SP'?AW109SP.BAG_Z1_ARM:5696;return [
+          <tr><td style="text-align:left">Pilot</td><td>${cg.pilot||75}</td><td>${window.bfSelectedAc==='109SP'?AW109SP.PILOT_ARM:AW109E.PILOT_ARM}</td><td>${Math.round((cg.pilot||75)*(window.bfSelectedAc==='109SP'?AW109SP.PILOT_ARM:AW109E.PILOT_ARM))}</td></tr>
+          <tr><td style="text-align:left">Co-Pilot / PAX</td><td>${cg.copilot||75}</td><td>${window.bfSelectedAc==='109SP'?AW109SP.COPILOT_ARM:AW109E.COPILOT_ARM}</td><td>${Math.round((cg.copilot||75)*(window.bfSelectedAc==='109SP'?AW109SP.COPILOT_ARM:AW109E.COPILOT_ARM))}</td></tr>
+          ${(()=>{const _fA=window.bfSelectedAc==='109SP'?AW109SP.FWD_CABIN_ARM:2455;const _aA=window.bfSelectedAc==='109SP'?AW109SP.AFT_CABIN_ARM:3200;const _bA=window.bfSelectedAc==='109SP'?AW109SP.BAG_Z1_ARM:5696;return [
             (cg.fwdL||0)>0?`<tr><td style="text-align:left">Fwd-L PAX</td><td>${cg.fwdL}</td><td>${_fA}</td><td>${Math.round(cg.fwdL*_fA)}</td></tr>`:'',
             (cg.fwdC||0)>0?`<tr><td style="text-align:left">Fwd-C PAX</td><td>${cg.fwdC}</td><td>${_fA}</td><td>${Math.round(cg.fwdC*_fA)}</td></tr>`:'',
             (cg.fwdR||0)>0?`<tr><td style="text-align:left">Fwd-R PAX</td><td>${cg.fwdR}</td><td>${_fA}</td><td>${Math.round(cg.fwdR*_fA)}</td></tr>`:'',
@@ -4646,14 +4646,14 @@ document.getElementById('importBtn').onclick=()=>{
           ].join('');})()}
           ${cg.paxMismatch?`<tr><td colspan="4" style="color:#cc0000;font-weight:700;text-align:left">⚠ PAX weight mismatch: Step 2 = ${cg.step2PaxTotal} kg, CG seats = ${cg.cgPaxTotal} kg</td></tr>`:''}
           <tr style="background:#f0f0f0;font-weight:700"><td style="text-align:left">Zero Fuel Weight</td><td>${fmt1(cg.zfwWt||0)}</td><td>${Math.round(cg.zfwArm||0)}</td><td>—</td></tr>
-          <tr><td style="text-align:left">Take-Off Fuel</td><td>${cg.fuelTO||0}</td><td>${bfSelectedAc==='109SP'?spFuelArm(cg.fuelTO||0):AW109E.FUEL_ARM_TO}</td><td>${Math.round((cg.fuelTO||0)*(bfSelectedAc==='109SP'?spFuelArm(cg.fuelTO||0):AW109E.FUEL_ARM_TO))}</td></tr>
+          <tr><td style="text-align:left">Take-Off Fuel</td><td>${cg.fuelTO||0}</td><td>${window.bfSelectedAc==='109SP'?spFuelArm(cg.fuelTO||0):AW109E.FUEL_ARM_TO}</td><td>${Math.round((cg.fuelTO||0)*(window.bfSelectedAc==='109SP'?spFuelArm(cg.fuelTO||0):AW109E.FUEL_ARM_TO))}</td></tr>
           <tr style="background:#e8f5e9;font-weight:700"><td style="text-align:left">Take-Off Weight</td><td>${fmt1(cg.towWt||0)}</td><td style="color:${toOK?'green':'red'};font-weight:700">${Math.round(cg.towArm||0)} mm</td><td style="color:${toOK?'green':'red'}">${toOK?'✓ IN ENV':'✗ OUTSIDE'}</td></tr>
-          <tr><td style="text-align:left">Burn-Off</td><td>${fmt1(cg.burnOff||0)}</td><td>${bfSelectedAc==='109SP'?AW109SP.BURN_ARM:AW109E.BURN_ARM}</td><td>${Math.round((cg.burnOff||0)*(bfSelectedAc==='109SP'?AW109SP.BURN_ARM:AW109E.BURN_ARM))}</td></tr>
+          <tr><td style="text-align:left">Burn-Off</td><td>${fmt1(cg.burnOff||0)}</td><td>${window.bfSelectedAc==='109SP'?AW109SP.BURN_ARM:AW109E.BURN_ARM}</td><td>${Math.round((cg.burnOff||0)*(window.bfSelectedAc==='109SP'?AW109SP.BURN_ARM:AW109E.BURN_ARM))}</td></tr>
           <tr style="background:#e3f2fd;font-weight:700"><td style="text-align:left">Landing Weight</td><td>${fmt1(cg.ldwWt||0)}</td><td style="color:${ldOK?'green':'red'};font-weight:700">${Math.round(cg.ldwArm||0)} mm</td><td style="color:${ldOK?'green':'red'}">${ldOK?'✓ IN ENV':'✗ OUTSIDE'}</td></tr>
         </tbody>
       </table>
       <div style="text-align:center">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;background:#333;color:#fff;padding:3px 7px;margin-bottom:6px">CG ENVELOPE — ${bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;background:#333;color:#fff;padding:3px 7px;margin-bottom:6px">CG ENVELOPE — ${window.bfSelectedAc==="109SP"?"AW109SP":"AW109E"}</div>
         ${cgSVG}
         <div style="font-size:8px;color:#555;margin-top:4px">● TO Point (circle) &nbsp; ◆ LD Point (diamond)</div>
         <div style="margin-top:10px" class="verdict-box">
