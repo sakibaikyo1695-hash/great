@@ -6455,7 +6455,32 @@ window.attachPostLoginHandlers = function(){
     var _myUid         = null;
 
     // Called after login to set current user uid
-    window._setChatUser = function(uid){ _myUid = uid; startUnreadWatcher(); };
+    window._setChatUser = function(uid){
+      _myUid = uid;
+      startUnreadWatcher();
+      cleanOldMessages(uid);
+    };
+
+    // ── Auto-delete messages older than 30 days ──────────────────────
+    function cleanOldMessages(uid){
+      var cutoff = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 days ago
+      // Find all chat keys that involve this user
+      fbDb.ref('chats').once('value').then(function(snap){
+        var chats = snap.val();
+        if(!chats) return;
+        Object.keys(chats).forEach(function(chatKey){
+          // Only clean chats that belong to this user
+          var parts = chatKey.split('_');
+          if(!parts.includes(uid)) return;
+          var messagesRef = fbDb.ref('chats/' + chatKey + '/messages');
+          messagesRef.orderByChild('timestamp').endAt(cutoff).once('value').then(function(oldSnap){
+            oldSnap.forEach(function(msg){
+              msg.ref.remove();
+            });
+          });
+        });
+      });
+    }
 
     // ── Chat key — always smaller uid first for consistency ──────────
     function chatKey(uid1, uid2){
