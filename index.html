@@ -6271,15 +6271,38 @@ window.attachPostLoginHandlers = function(){
 
   /* ── CHAT SYSTEM ── */
   (function(){
-    var chatOverlay    = document.getElementById('chatOverlay');
-    var chatMessages   = document.getElementById('chatMessages');
-    var chatInput      = document.getElementById('chatInput');
-    var chatSendBtn    = document.getElementById('chatSendBtn');
-    var chatHeaderName = document.getElementById('chatHeaderName');
-    var chatHeaderStatus = document.getElementById('chatHeaderStatus');
-    var chatHeaderDot  = document.getElementById('chatHeaderDot');
-    var chatCloseBtn   = document.getElementById('chatCloseBtn');
-    var crewUnreadBadge = document.getElementById('crewUnreadBadge');
+    // Lazy DOM refs — grabbed on first use so elements are always ready
+    function el(id){ return document.getElementById(id); }
+    var chatOverlay, chatMessages, chatInput, chatSendBtn,
+        chatHeaderName, chatHeaderStatus, chatHeaderDot,
+        chatCloseBtn, crewUnreadBadge;
+    function initEls(){
+      chatOverlay    = el('chatOverlay');
+      chatMessages   = el('chatMessages');
+      chatInput      = el('chatInput');
+      chatSendBtn    = el('chatSendBtn');
+      chatHeaderName = el('chatHeaderName');
+      chatHeaderStatus = el('chatHeaderStatus');
+      chatHeaderDot  = el('chatHeaderDot');
+      chatCloseBtn   = el('chatCloseBtn');
+      crewUnreadBadge = el('crewUnreadBadge');
+      // Bind events once
+      if(chatSendBtn && !chatSendBtn._bound){
+        chatSendBtn._bound = true;
+        chatSendBtn.onclick = sendMessage;
+        chatInput.addEventListener('keypress', function(e){
+          if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); }
+        });
+        chatCloseBtn.onclick = function(){
+          chatOverlay.classList.remove('open');
+          if(_chatListener && _chatRef){
+            _chatRef.off('child_added', _chatListener);
+            _chatListener = null;
+          }
+          _chatPeerId = null;
+        };
+      }
+    }
 
     var _chatPeerId    = null;  // uid of the person we're chatting with
     var _chatPeerName  = null;
@@ -6313,6 +6336,7 @@ window.attachPostLoginHandlers = function(){
     // ── Open chat with a peer ────────────────────────────────────────
     window.openChat = function(peerUid){
       if(!_myUid) return;
+      initEls();
       _chatPeerId = peerUid;
 
       // Get peer name from allUsers cache
@@ -6392,21 +6416,6 @@ window.attachPostLoginHandlers = function(){
       fbDb.ref('unread/' + _chatPeerId + '/' + _myUid).set(firebase.database.ServerValue.TIMESTAMP);
     }
 
-    chatSendBtn.onclick = sendMessage;
-    chatInput.addEventListener('keypress', function(e){
-      if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); }
-    });
-
-    // ── Close chat ───────────────────────────────────────────────────
-    chatCloseBtn.onclick = function(){
-      chatOverlay.classList.remove('open');
-      if(_chatListener && _chatRef){
-        _chatRef.off('child_added', _chatListener);
-        _chatListener = null;
-      }
-      _chatPeerId = null;
-    };
-
     // ── Mark messages as read ────────────────────────────────────────
     function markRead(peerUid){
       if(!_myUid) return;
@@ -6419,11 +6428,13 @@ window.attachPostLoginHandlers = function(){
       fbDb.ref('unread/' + _myUid).on('value', function(snap){
         var data = snap.val() || {};
         _totalUnread = Object.keys(data).length;
+        var badge = el('crewUnreadBadge');
+        if(!badge) return;
         if(_totalUnread > 0){
-          crewUnreadBadge.textContent = _totalUnread;
-          crewUnreadBadge.style.display = 'inline-block';
+          badge.textContent = _totalUnread;
+          badge.style.display = 'inline-block';
         } else {
-          crewUnreadBadge.style.display = 'none';
+          badge.style.display = 'none';
         }
       });
     }
