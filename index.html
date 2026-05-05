@@ -1380,15 +1380,20 @@ textarea{resize:vertical;min-height:55px}
       </div>
     </div>
   </div>
-  <!-- Import / Export -->
+  <!-- Import / Export — collapsible -->
   <div class="section">
-    <div class="section-label">Import / Export</div>
-    <div class="btn-row">
-      <a id="saveBtn" class="btn btn-green">💾 SAVE</a>
-      <a id="exportBtn" class="btn">📤 EXPORT</a>
-      <a id="importBtn" class="btn btn-amber">📥 IMPORT</a>
+    <div class="section-label" id="importExportToggle" style="cursor:pointer;user-select:none">
+      Import / Export
+      <span id="importExportArrow" style="margin-left:auto;color:var(--accent-blue);font-size:11px">▶ EXPAND</span>
     </div>
-    <textarea id="jsonArea" rows="3" placeholder="Paste JSON here to import..."></textarea>
+    <div id="importExportPanel" style="display:none">
+      <div class="btn-row">
+        <a id="saveBtn" class="btn btn-green">💾 SAVE</a>
+        <a id="exportBtn" class="btn">📤 EXPORT</a>
+        <a id="importBtn" class="btn btn-amber">📥 IMPORT</a>
+      </div>
+      <textarea id="jsonArea" rows="3" placeholder="Paste JSON here to import..."></textarea>
+    </div>
   </div>
 
   <!-- Coords / Status -->
@@ -6079,6 +6084,13 @@ if('serviceWorker'in navigator){
 })();
   // Area visibility accordion + User Guide — attached after login
 window.attachPostLoginHandlers = function(){
+  document.getElementById('importExportToggle').onclick=function(){
+    var panel=document.getElementById('importExportPanel');
+    var arrow=document.getElementById('importExportArrow');
+    var open=panel.style.display==='block';
+    panel.style.display=open?'none':'block';
+    arrow.textContent=open?'▶ EXPAND':'▼ COLLAPSE';
+  };
   document.getElementById('areaVisToggle').onclick=function(){
     const panel=document.getElementById('areaVisPanel');
     const arrow=document.getElementById('areaVisArrow');
