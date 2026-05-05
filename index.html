@@ -5904,12 +5904,27 @@ window.attachPostLoginHandlers = function(){
 
   document.getElementById('pendingLogoutBtn').onclick = function(){ fbAuth.signOut(); };
 
+  // ── Device ID (session displacement) ──────────────────────────────
+  function getDeviceId(){
+    var key = 'airnav_device_id';
+    var id = localStorage.getItem(key);
+    if(!id){
+      id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2,10);
+      localStorage.setItem(key, id);
+    }
+    return id;
+  }
+  var _sessionListener = null; // holds onValue unsubscribe
+
   fbAuth.onAuthStateChanged(function(user){
     if(!user){
       authScreen.classList.remove('hidden'); showPanel('login');
       document.getElementById('loginBtn').disabled=false; document.getElementById('loginBtn').textContent='LOGIN';
       document.getElementById('adminBtnContainer').style.display='none';
-      currentUserData=null; return;
+      currentUserData=null;
+      // Detach session listener if any
+      if(_sessionListener){ _sessionListener(); _sessionListener=null; }
+      return;
     }
     fbDb.ref('users/'+user.uid).once('value').then(function(snap){
       var data=snap.val()||{}; currentUserData=data; currentUserData.uid=user.uid;
@@ -5924,6 +5939,30 @@ window.attachPostLoginHandlers = function(){
         el=document.getElementById('profileRoleTag'); if(el) el.textContent=r==='admin'?'● ADMIN · ONLINE':'● ONLINE';
         el=document.getElementById('profileEmailDisplay'); if(el) el.textContent='✉ '+(data.email||user.email||'—');
         el=document.getElementById('profileNameInput'); if(el) el.value=n;
+
+        // ── Session displacement (regular users only) ──────────────
+        if(data.role !== 'admin'){
+          var myDeviceId = getDeviceId();
+          var sessionRef = fbDb.ref('sessions/' + user.uid);
+          // Write this device as the active session
+          sessionRef.set({ deviceId: myDeviceId, lastLogin: Date.now() }).then(function(){
+            // Now listen for changes — if deviceId changes, someone else logged in
+            if(_sessionListener){ _sessionListener(); _sessionListener=null; }
+            _sessionListener = sessionRef.on('value', function(s){
+              var sess = s.val();
+              if(sess && sess.deviceId && sess.deviceId !== myDeviceId){
+                // Another device took over — sign out silently
+                if(_sessionListener){ sessionRef.off('value'); _sessionListener=null; }
+                fbAuth.signOut().then(function(){
+                  authScreen.classList.remove('hidden'); showPanel('login');
+                  setMsg('loginMsg','You were signed out because your account was opened on another device.','error');
+                });
+              }
+            });
+          });
+        }
+        // ────────────────────────────────────────────────────────────
+
         if(!window._appInitialized){ window._appInitialized=true; initializeApp(); }
       } else if(data.status==='banned'){
         fbAuth.signOut(); authScreen.classList.remove('hidden'); showPanel('login');
