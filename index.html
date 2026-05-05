@@ -657,6 +657,95 @@ textarea{resize:vertical;min-height:55px}
   display:none;
 }
 
+/* ======== TACTICAL SHARE ======== */
+#sharePanel{
+  position:absolute;bottom:60px;left:0;right:0;
+  background:var(--bg-panel);border-top:2px solid var(--accent-amber);
+  max-height:65vh;overflow-y:auto;display:none;flex-direction:column;
+  z-index:10;
+}
+#sharePanel.open{display:flex}
+.share-tabs{display:flex;border-bottom:1px solid var(--border-dim);flex-shrink:0}
+.share-tab{
+  flex:1;padding:9px 4px;text-align:center;cursor:pointer;
+  font-family:var(--font-display);font-size:10px;font-weight:700;
+  letter-spacing:1px;color:var(--text-dim);border-bottom:2px solid transparent;
+  transition:all 0.2s;
+}
+.share-tab.active{color:var(--accent-amber);border-bottom-color:var(--accent-amber);}
+.share-tab-content{display:none;flex-direction:column;padding:8px 12px;}
+.share-tab-content.active{display:flex}
+.share-select-all-row{display:flex;gap:6px;margin-bottom:6px;flex-shrink:0}
+.share-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 4px;border-bottom:1px solid var(--border-dim);cursor:pointer;
+}
+.share-item:last-child{border-bottom:none}
+.share-item input[type=checkbox]{
+  width:16px;height:16px;accent-color:var(--accent-amber);flex-shrink:0;
+}
+.share-item-label{
+  flex:1;font-family:var(--font-ui);font-size:12px;color:var(--text-primary);
+}
+.share-item-sub{font-size:10px;color:var(--text-dim);font-family:var(--font-mono);}
+.share-send-row{
+  padding:10px 12px;border-top:1px solid var(--border-dim);
+  display:flex;gap:8px;flex-shrink:0;background:var(--bg-panel);
+}
+
+/* Receive modal */
+#receiveModal{
+  position:fixed;left:0;top:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.88);z-index:70000;
+  display:none;align-items:center;justify-content:center;
+  padding:16px;backdrop-filter:blur(4px);
+}
+#receiveModal.open{display:flex}
+#receiveBox{
+  background:var(--bg-panel);border:1px solid var(--accent-amber);
+  border-radius:12px;width:100%;max-width:420px;
+  max-height:88vh;overflow-y:auto;padding:18px 16px;
+  box-shadow:0 0 40px rgba(255,171,0,0.2);
+}
+#receiveBox h3{
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  letter-spacing:2px;color:var(--accent-amber);margin:0 0 4px;
+}
+#receiveBox .receive-from{
+  font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:14px;
+}
+.receive-section-title{
+  font-family:var(--font-display);font-size:9px;font-weight:700;
+  letter-spacing:2px;color:var(--text-dim);margin:10px 0 4px;
+  text-transform:uppercase;
+}
+.receive-item{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 4px;border-bottom:1px solid var(--border-dim);cursor:pointer;
+}
+.receive-item:last-child{border-bottom:none}
+.receive-item input[type=checkbox]{
+  width:16px;height:16px;accent-color:var(--accent-green);flex-shrink:0;
+}
+.receive-item-label{flex:1;font-size:12px;color:var(--text-primary);font-family:var(--font-ui);}
+.receive-item-sub{font-size:10px;color:var(--text-dim);font-family:var(--font-mono);}
+.pkg-bubble{
+  background:rgba(255,171,0,0.10);border:1px solid rgba(255,171,0,0.35);
+  border-radius:10px;padding:10px 12px;margin:4px 0;cursor:pointer;
+}
+.pkg-bubble-title{
+  font-family:var(--font-display);font-size:11px;font-weight:700;
+  color:var(--accent-amber);letter-spacing:1px;margin-bottom:3px;
+}
+.pkg-bubble-summary{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);}
+.pkg-bubble-btn{
+  display:inline-block;margin-top:6px;padding:4px 10px;
+  background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.4);
+  color:var(--accent-green);border-radius:4px;
+  font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:1px;
+  cursor:pointer;
+}
+
 /* ======== INSECURE OVERLAY ======== */
 #insecureOverlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;padding:24px}
 #insecureOverlay .box{background:var(--bg-panel);border:1px solid var(--border-glow);padding:20px;border-radius:10px;max-width:720px;margin:auto;color:var(--text-primary)}
@@ -5368,6 +5457,47 @@ function deleteCachedAreaRecord(id){
 
   })(); // end pre-flight cache IIFE
   loadLocal();
+
+  // ── Expose app data for tactical share ───────────────────────────
+  window._getAppData = function(){
+    return { waypoints: waypoints, areas: areas, routes: savedRoutes };
+  };
+
+  window._getSaveCallbacks = function(){
+    return {
+      hasWaypoint: function(name){ return !!waypoints.find(function(w){ return w.name===name; }); },
+      hasArea:     function(name){ return !!areas.find(function(a){ return a.name===name; }); },
+      hasRoute:    function(name){ return !!savedRoutes.find(function(r){ return r.name===name; }); },
+      addWaypoint: function(wp){
+        var newId = Date.now() + Math.floor(999*Math.random());
+        addWaypointNoSave(wp.lat, wp.lon, wp.name, wp.markerType||'default', wp.info||'', newId);
+      },
+      addArea: function(ar){
+        var newId = Date.now() + Math.floor(999*Math.random());
+        var newAr = Object.assign({}, ar, {id: newId});
+        areaVisible[newId] = true;
+        areas.push(newAr);
+        drawArea(newAr);
+        renderAreaList();
+      },
+      addRoute: function(rt){
+        // Remap waypointIds to currently loaded waypoints by name
+        var remapped = (rt.waypointIds||[]).map(function(oldId){
+          // Try to find by matching name from route legs
+          var leg = (rt.legs||[]).find(function(l){ return true; });
+          var found = waypoints.find(function(w){ return w.id===oldId; });
+          return found ? found.id : oldId;
+        });
+        savedRoutes.push({
+          id: Date.now() + Math.floor(999*Math.random()),
+          name: rt.name, waypointIds: remapped,
+          legs: rt.legs, totalDist: rt.totalDist
+        });
+        saveAllRoutes();
+      },
+      persist: function(){ saveLocal(); }
+    };
+  };
 }
 
 /* ====================================================
@@ -6355,6 +6485,7 @@ window.attachPostLoginHandlers = function(){
       chatMessages.innerHTML = '';
       chatInput.value = '';
       chatInput.focus();
+      initShare();
 
       // Detach old listener
       if(_chatListener && _chatRef){
@@ -6385,11 +6516,16 @@ window.attachPostLoginHandlers = function(){
         }
 
         var isMine = msg.from === _myUid;
-        var bubble = document.createElement('div');
-        bubble.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
-        bubble.innerHTML =
-          '<div>' + escapeHtml(msg.text) + '</div>' +
-          '<div class="chat-msg-time">' + fmtTime(msg.timestamp) + '</div>';
+        var bubble;
+        if(msg.type === 'package'){
+          bubble = renderPackageBubble(msg, isMine);
+        } else {
+          bubble = document.createElement('div');
+          bubble.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
+          bubble.innerHTML =
+            '<div>' + escapeHtml(msg.text) + '</div>' +
+            '<div class="chat-msg-time">' + fmtTime(msg.timestamp) + '</div>';
+        }
         chatMessages.appendChild(bubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -6421,6 +6557,269 @@ window.attachPostLoginHandlers = function(){
       if(!_myUid) return;
       fbDb.ref('unread/' + _myUid + '/' + peerUid).remove();
     }
+
+    // ── TACTICAL SHARE SYSTEM ────────────────────────────────────────
+    var _shareOpen = false;
+
+    function initShare(){
+      var shareBtn    = el('chatShareBtn');
+      var sharePanel  = el('sharePanel');
+      var cancelBtn   = el('shareCancelBtn');
+      var sendBtn     = el('shareSendBtn');
+      if(!shareBtn || shareBtn._shareBound) return;
+      shareBtn._shareBound = true;
+
+      // Tab switching
+      sharePanel.querySelectorAll('.share-tab').forEach(function(tab){
+        tab.onclick = function(){
+          sharePanel.querySelectorAll('.share-tab').forEach(function(t){ t.classList.remove('active'); });
+          sharePanel.querySelectorAll('.share-tab-content').forEach(function(c){ c.classList.remove('active'); });
+          tab.classList.add('active');
+          var tabId = 'shareTab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
+          var content = el(tabId);
+          if(content) content.classList.add('active');
+        };
+      });
+
+      // Select all / none
+      el('shareWpAll').onclick  = function(){ el('shareWpList').querySelectorAll('input').forEach(function(c){ c.checked=true; }); };
+      el('shareWpNone').onclick = function(){ el('shareWpList').querySelectorAll('input').forEach(function(c){ c.checked=false; }); };
+      el('shareArAll').onclick  = function(){ el('shareArList').querySelectorAll('input').forEach(function(c){ c.checked=true; }); };
+      el('shareArNone').onclick = function(){ el('shareArList').querySelectorAll('input').forEach(function(c){ c.checked=false; }); };
+      el('shareRtAll').onclick  = function(){ el('shareRtList').querySelectorAll('input').forEach(function(c){ c.checked=true; }); };
+      el('shareRtNone').onclick = function(){ el('shareRtList').querySelectorAll('input').forEach(function(c){ c.checked=false; }); };
+
+      // Open share panel
+      shareBtn.onclick = function(){
+        _shareOpen = !_shareOpen;
+        if(_shareOpen){
+          sharePanel.classList.add('open');
+          populateShareLists();
+        } else {
+          sharePanel.classList.remove('open');
+        }
+      };
+
+      // Cancel
+      cancelBtn.onclick = function(){
+        _shareOpen = false;
+        sharePanel.classList.remove('open');
+      };
+
+      // Send package
+      sendBtn.onclick = function(){
+        var pkg = buildPackage();
+        if(!pkg.waypoints.length && !pkg.areas.length && !pkg.routes.length){
+          alert('Please select at least one item to share.'); return;
+        }
+        var summary = [];
+        if(pkg.waypoints.length) summary.push(pkg.waypoints.length + ' waypoint' + (pkg.waypoints.length>1?'s':''));
+        if(pkg.areas.length)     summary.push(pkg.areas.length + ' area' + (pkg.areas.length>1?'s':''));
+        if(pkg.routes.length)    summary.push(pkg.routes.length + ' route' + (pkg.routes.length>1?'s':''));
+        var msg = {
+          from: _myUid,
+          type: 'package',
+          summary: summary.join(', '),
+          pkg: pkg,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        _chatRef.push(msg);
+        fbDb.ref('unread/' + _chatPeerId + '/' + _myUid).set(firebase.database.ServerValue.TIMESTAMP);
+        _shareOpen = false;
+        sharePanel.classList.remove('open');
+      };
+    }
+
+    // Populate share lists from app data
+    function populateShareLists(){
+      var appData = window._getAppData ? window._getAppData() : { waypoints:[], areas:[], routes:[] };
+      var wpList = el('shareWpList'); wpList.innerHTML = '';
+      var arList = el('shareArList'); arList.innerHTML = '';
+      var rtList = el('shareRtList'); rtList.innerHTML = '';
+
+      if(!appData.waypoints.length) wpList.innerHTML = '<div class="crew-empty">No waypoints saved</div>';
+      appData.waypoints.forEach(function(wp){
+        var row = document.createElement('div'); row.className = 'share-item';
+        row.innerHTML = '<input type="checkbox" class="share-wp-chk" data-id="'+wp.id+'">' +
+          '<div><div class="share-item-label">'+escapeHtml(wp.name)+'</div>' +
+          '<div class="share-item-sub">'+wp.lat.toFixed(4)+'° '+wp.lon.toFixed(4)+'°</div></div>';
+        wpList.appendChild(row);
+      });
+
+      if(!appData.areas.length) arList.innerHTML = '<div class="crew-empty">No areas saved</div>';
+      appData.areas.forEach(function(ar){
+        var row = document.createElement('div'); row.className = 'share-item';
+        row.innerHTML = '<input type="checkbox" class="share-ar-chk" data-id="'+ar.id+'">' +
+          '<div><div class="share-item-label" style="color:'+(ar.color||'#8b45c1')+'">●</div></div>' +
+          '<div><div class="share-item-label">'+escapeHtml(ar.name)+'</div>' +
+          '<div class="share-item-sub">'+(ar.type==='circular'?'⭕ Circular':'📐 Polygon')+'</div></div>';
+        arList.appendChild(row);
+      });
+
+      if(!appData.routes.length) rtList.innerHTML = '<div class="crew-empty">No saved routes</div>';
+      appData.routes.forEach(function(rt){
+        var row = document.createElement('div'); row.className = 'share-item';
+        row.innerHTML = '<input type="checkbox" class="share-rt-chk" data-id="'+rt.id+'">' +
+          '<div><div class="share-item-label">'+escapeHtml(rt.name)+'</div>' +
+          '<div class="share-item-sub">'+rt.totalDist+' NM · '+rt.legs.length+' leg'+(rt.legs.length!==1?'s':'')+'</div></div>';
+        rtList.appendChild(row);
+      });
+    }
+
+    // Build package from checked items
+    function buildPackage(){
+      var appData = window._getAppData ? window._getAppData() : { waypoints:[], areas:[], routes:[] };
+      var selWpIds = Array.from(el('shareWpList').querySelectorAll('.share-wp-chk:checked')).map(function(c){ return +c.dataset.id; });
+      var selArIds = Array.from(el('shareArList').querySelectorAll('.share-ar-chk:checked')).map(function(c){ return +c.dataset.id; });
+      var selRtIds = Array.from(el('shareRtList').querySelectorAll('.share-rt-chk:checked')).map(function(c){ return +c.dataset.id; });
+
+      var selWps = appData.waypoints.filter(function(w){ return selWpIds.includes(w.id); });
+      var selArs = appData.areas.filter(function(a){ return selArIds.includes(a.id); });
+      var selRts = appData.routes.filter(function(r){ return selRtIds.includes(r.id); });
+
+      // For each selected route, include its waypoints automatically
+      var routeWpIds = new Set();
+      selRts.forEach(function(rt){ (rt.waypointIds||[]).forEach(function(id){ routeWpIds.add(id); }); });
+      routeWpIds.forEach(function(id){
+        if(!selWps.find(function(w){ return w.id===id; })){
+          var wp = appData.waypoints.find(function(w){ return w.id===id; });
+          if(wp) selWps.push(wp);
+        }
+      });
+
+      // Strip plate binary data (keep only name+index metadata)
+      var cleanWps = selWps.map(function(w){
+        return { id:w.id, lat:w.lat, lon:w.lon, name:w.name, markerType:w.markerType||'default', info:w.info||'',
+          plates:(w.plates||[]).map(function(p){ return {name:p.name}; }) };
+      });
+      var cleanArs = selArs.map(function(a){
+        return { id:a.id, name:a.name, type:a.type, color:a.color, info:a.info||'',
+          corners:a.corners||[], centerWaypoint:a.centerWaypoint||'', diameter:a.diameter||0 };
+      });
+      var cleanRts = selRts.map(function(r){
+        return { id:r.id, name:r.name, waypointIds:r.waypointIds, legs:r.legs, totalDist:r.totalDist };
+      });
+
+      return { waypoints: cleanWps, areas: cleanArs, routes: cleanRts };
+    }
+
+    // ── Render package bubble in chat ────────────────────────────────
+    function renderPackageBubble(msg, isMine){
+      var pkg = msg.pkg || {};
+      var summary = msg.summary || 'Tactical package';
+      var bubble = document.createElement('div');
+      bubble.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
+      var lines = [];
+      if(pkg.waypoints && pkg.waypoints.length) lines.push('📍 '+pkg.waypoints.length+' waypoint'+(pkg.waypoints.length>1?'s':''));
+      if(pkg.areas     && pkg.areas.length)     lines.push('🗺️ '+pkg.areas.length+' area'+(pkg.areas.length>1?'s':''));
+      if(pkg.routes    && pkg.routes.length)     lines.push('🛣️ '+pkg.routes.length+' route'+(pkg.routes.length>1?'s':''));
+      bubble.innerHTML =
+        '<div class="pkg-bubble">'+
+          '<div class="pkg-bubble-title">📦 TACTICAL PACKAGE</div>'+
+          '<div class="pkg-bubble-summary">'+lines.join(' · ')+'</div>'+
+          (!isMine ? '<div class="pkg-bubble-btn" onclick="window._openReceiveModal(this)">📥 PREVIEW &amp; SAVE</div>' : '')+
+        '</div>'+
+        '<div class="chat-msg-time">'+fmtTime(msg.timestamp)+'</div>';
+      // Store pkg data on the button
+      if(!isMine){
+        var btn = bubble.querySelector('.pkg-bubble-btn');
+        if(btn) btn._pkgData = { pkg: pkg, fromUid: msg.from };
+      }
+      return bubble;
+    }
+
+    // ── Open receive modal ───────────────────────────────────────────
+    window._openReceiveModal = function(btn){
+      var data = btn._pkgData;
+      if(!data) return;
+      var pkg = data.pkg;
+      var fromUid = data.fromUid;
+
+      // Get sender name
+      var allUsers = window._crewAllUsers || {};
+      var fromName = (allUsers[fromUid] && allUsers[fromUid].displayName) || 'Crew member';
+
+      var modal = el('receiveModal');
+      var container = el('receiveItemsContainer');
+      var fromEl = el('receiveFrom');
+      var saveMsg = el('receiveSaveMsg');
+      fromEl.textContent = 'From: ' + fromName;
+      saveMsg.textContent = '';
+      container.innerHTML = '';
+
+      function makeSection(title, items, cls, labelFn, subFn){
+        if(!items || !items.length) return;
+        var h = document.createElement('div'); h.className='receive-section-title'; h.textContent=title;
+        container.appendChild(h);
+        items.forEach(function(item){
+          var row = document.createElement('div'); row.className='receive-item';
+          row.innerHTML = '<input type="checkbox" class="'+cls+'" checked>' +
+            '<div><div class="receive-item-label">'+escapeHtml(labelFn(item))+'</div>'+
+            '<div class="receive-item-sub">'+escapeHtml(subFn(item))+'</div></div>';
+          row.querySelector('input')._item = item;
+          container.appendChild(row);
+        });
+      }
+
+      makeSection('📍 WAYPOINTS', pkg.waypoints, 'recv-wp-chk',
+        function(w){ return w.name; },
+        function(w){ return w.lat.toFixed(4)+'°  '+w.lon.toFixed(4)+'°'; }
+      );
+      makeSection('🗺️ AREAS', pkg.areas, 'recv-ar-chk',
+        function(a){ return a.name; },
+        function(a){ return (a.type==='circular'?'⭕ Circular':'📐 Polygon'); }
+      );
+      makeSection('🛣️ ROUTES', pkg.routes, 'recv-rt-chk',
+        function(r){ return r.name; },
+        function(r){ return r.totalDist+' NM · '+r.legs.length+' leg'+(r.legs.length!==1?'s':'')+'  (waypoints auto-included)'; }
+      );
+
+      if(!container.children.length){
+        container.innerHTML = '<div class="crew-empty">Package is empty</div>';
+      }
+
+      modal.classList.add('open');
+
+      // Save button
+      var saveBtn = el('receiveSaveBtn');
+      saveBtn.onclick = function(){
+        var saveData = window._getSaveCallbacks ? window._getSaveCallbacks() : null;
+        if(!saveData){ saveMsg.textContent='Error: app not ready.'; return; }
+
+        var selWps = Array.from(container.querySelectorAll('.recv-wp-chk:checked')).map(function(c){ return c._item; });
+        var selArs = Array.from(container.querySelectorAll('.recv-ar-chk:checked')).map(function(c){ return c._item; });
+        var selRts = Array.from(container.querySelectorAll('.recv-rt-chk:checked')).map(function(c){ return c._item; });
+
+        var saved=0, skipped=0;
+
+        // Save waypoints
+        selWps.forEach(function(wp){
+          if(saveData.hasWaypoint(wp.name)){ skipped++; return; }
+          saveData.addWaypoint(wp); saved++;
+        });
+
+        // Save areas
+        selArs.forEach(function(ar){
+          if(saveData.hasArea(ar.name)){ skipped++; return; }
+          saveData.addArea(ar); saved++;
+        });
+
+        // Save routes (waypoints for routes already included in selWps above if sent together)
+        selRts.forEach(function(rt){
+          if(saveData.hasRoute(rt.name)){ skipped++; return; }
+          saveData.addRoute(rt); saved++;
+        });
+
+        saveData.persist();
+        var msg2 = '✅ Saved '+saved+' item'+(saved!==1?'s':'');
+        if(skipped) msg2 += ' · '+skipped+' skipped (already exist)';
+        saveMsg.style.color='var(--accent-green)';
+        saveMsg.textContent = msg2;
+        setTimeout(function(){ modal.classList.remove('open'); }, 1800);
+      };
+
+      el('receiveCloseBtn').onclick = function(){ modal.classList.remove('open'); };
+    };
 
     // ── Watch unread counts across all peers ─────────────────────────
     function startUnreadWatcher(){
@@ -6518,9 +6917,57 @@ window.attachPostLoginHandlers = function(){
     <div id="chatHeaderDot" class="crew-presence-dot offline" style="margin-left:auto"></div>
   </div>
   <div id="chatMessages"></div>
+  <!-- SHARE PANEL -->
+  <div id="sharePanel">
+    <div class="share-tabs">
+      <div class="share-tab active" data-tab="wp">📍 WAYPOINTS</div>
+      <div class="share-tab" data-tab="ar">🗺️ AREAS</div>
+      <div class="share-tab" data-tab="rt">🛣️ ROUTES</div>
+    </div>
+    <div id="shareTabWp" class="share-tab-content active">
+      <div class="share-select-all-row">
+        <button class="btn small btn-amber" id="shareWpAll">✅ All</button>
+        <button class="btn small" id="shareWpNone">✖ None</button>
+      </div>
+      <div id="shareWpList"></div>
+    </div>
+    <div id="shareTabAr" class="share-tab-content">
+      <div class="share-select-all-row">
+        <button class="btn small btn-amber" id="shareArAll">✅ All</button>
+        <button class="btn small" id="shareArNone">✖ None</button>
+      </div>
+      <div id="shareArList"></div>
+    </div>
+    <div id="shareTabRt" class="share-tab-content">
+      <div class="share-select-all-row">
+        <button class="btn small btn-amber" id="shareRtAll">✅ All</button>
+        <button class="btn small" id="shareRtNone">✖ None</button>
+      </div>
+      <div id="shareRtList"></div>
+    </div>
+    <div class="share-send-row">
+      <button class="btn btn-amber" id="shareSendBtn" style="flex:1;font-family:var(--font-display);font-size:11px;letter-spacing:1px">📤 SEND PACKAGE</button>
+      <button class="btn btn-red" id="shareCancelBtn" style="font-size:11px">✖ CANCEL</button>
+    </div>
+  </div>
   <div id="chatInputRow">
+    <button id="chatShareBtn" title="Share tactical data" style="width:36px;height:36px;border-radius:50%;background:rgba(255,171,0,0.15);border:1px solid rgba(255,171,0,0.5);color:var(--accent-amber);font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">📦</button>
     <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" maxlength="500">
     <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+<!-- RECEIVE MODAL -->
+<div id="receiveModal">
+  <div id="receiveBox">
+    <h3>📦 TACTICAL PACKAGE</h3>
+    <div class="receive-from" id="receiveFrom"></div>
+    <div id="receiveItemsContainer"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-green" id="receiveSaveBtn" style="flex:1;font-family:var(--font-display);font-size:11px;letter-spacing:1px">💾 SAVE SELECTED</button>
+      <button class="btn btn-red" id="receiveCloseBtn" style="font-size:11px">✖ CLOSE</button>
+    </div>
+    <div id="receiveSaveMsg" style="font-family:var(--font-mono);font-size:11px;margin-top:8px;min-height:14px;text-align:center"></div>
   </div>
 </div>
 
