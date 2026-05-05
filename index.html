@@ -5788,10 +5788,12 @@ window.attachPostLoginHandlers = function(){
     var profilePassMsg = document.getElementById('profilePassMsg');
 
     // ── Populate profile from Firebase ──
+    var _auth = firebase.auth();
+    var _db   = firebase.database();
     function loadProfile(){
-      var user = fbAuth.currentUser;
+      var user = _auth.currentUser;
       if(!user) return;
-      fbDb.ref('users/'+user.uid).once('value').then(function(snap){
+      _db.ref('users/'+user.uid).once('value').then(function(snap){
         var data = snap.val() || {};
         var name = data.displayName || user.email || 'USER';
         var role = data.role || 'user';
@@ -5817,16 +5819,16 @@ window.attachPostLoginHandlers = function(){
     document.getElementById('profileSaveNameBtn').onclick = function(){
       var newName = profileNameInput.value.trim();
       if(!newName){ setProfileMsg(profileNameMsg,'Enter a display name.','error'); return; }
-      var user = fbAuth.currentUser;
+      var user = _auth.currentUser;
       if(!user) return;
       var btn = this; btn.disabled = true;
       setProfileMsg(profileNameMsg,'Checking...','info');
 
       // Get current name to remove old index entry
-      fbDb.ref('users/'+user.uid+'/displayName').once('value').then(function(snap){
+      _db.ref('users/'+user.uid+'/displayName').once('value').then(function(snap){
         var oldName = snap.val();
         // Check if new name is taken (by someone else)
-        return fbDb.ref('displayNames/'+newName).once('value').then(function(taken){
+        return _db.ref('displayNames/'+newName).once('value').then(function(taken){
           if(taken.exists() && taken.val() !== user.uid){
             btn.disabled = false;
             setProfileMsg(profileNameMsg,'That name is already taken.','error');
@@ -5839,7 +5841,7 @@ window.attachPostLoginHandlers = function(){
           if(oldName && oldName !== newName){
             updates['displayNames/'+oldName] = null; // remove old index
           }
-          return fbDb.ref().update(updates);
+          return _db.ref().update(updates);
         });
       }).then(function(){
         btn.disabled = false;
@@ -5856,9 +5858,9 @@ window.attachPostLoginHandlers = function(){
 
     // ── Change password ──
     document.getElementById('profileChangePassBtn').onclick = function(){
-      var user = fbAuth.currentUser;
+      var user = _auth.currentUser;
       if(!user || !user.email) return;
-      fbAuth.sendPasswordResetEmail(user.email).then(function(){
+      _auth.sendPasswordResetEmail(user.email).then(function(){
         setProfileMsg(profilePassMsg,'Reset email sent to '+user.email,'success');
         setTimeout(function(){ setProfileMsg(profilePassMsg,'',''); }, 5000);
       }).catch(function(err){
@@ -5869,7 +5871,7 @@ window.attachPostLoginHandlers = function(){
     // ── Logout ──
     document.getElementById('profileLogoutBtn').onclick = function(){
       if(confirm('Sign out of SLAP-GAP Air Nav?')){
-        fbAuth.signOut();
+        _auth.signOut();
       }
     };
 
