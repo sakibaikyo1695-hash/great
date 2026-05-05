@@ -10,24 +10,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<!-- ======== FIREBASE SDK ======== -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBj4UT0S1plotGaVUBzcBzVA_KyeGF2aMg",
-  authDomain: "slapgap-airnav.firebaseapp.com",
-  databaseURL: "https://slapgap-airnav-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "slapgap-airnav",
-  storageBucket: "slapgap-airnav.firebasestorage.app",
-  messagingSenderId: "970190568256",
-  appId: "1:970190568256:web:54cd9efac142ee5b1f58a5"
-};
-firebase.initializeApp(firebaseConfig);
-const fbAuth = firebase.auth();
-const fbDb  = firebase.database();
-</script>
 <style>
 /* ======== ROOT VARIABLES ======== */
 :root{
@@ -483,91 +465,74 @@ textarea{resize:vertical;min-height:55px}
 
 
 
-/* ======== AUTH SCREEN ======== */
-#authScreen{
-  position:fixed;left:0;top:0;right:0;bottom:0;
-  background:var(--bg-deep);z-index:99999;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-ui);
+/* ======== USER PROFILE PANEL ======== */
+#profileSection{
+  border-bottom:1px solid var(--border-dim);
+  overflow:hidden;
 }
-#authScreen.hidden{display:none}
-.auth-box{
-  background:var(--bg-panel);border:1px solid var(--border-glow);
-  border-radius:12px;padding:36px 32px;width:100%;max-width:380px;
-  box-shadow:0 8px 40px rgba(0,0,0,0.7);
-}
-.auth-logo{font-family:var(--font-display);font-size:20px;font-weight:900;color:var(--accent-cyan);letter-spacing:3px;text-align:center;margin-bottom:4px;}
-.auth-subtitle{text-align:center;font-size:12px;color:var(--text-secondary);letter-spacing:2px;margin-bottom:28px;}
-.auth-title{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-bright);letter-spacing:2px;margin-bottom:20px;text-align:center;}
-.auth-field{margin-bottom:14px}
-.auth-field label{display:block;font-size:11px;color:var(--text-secondary);letter-spacing:1.5px;margin-bottom:5px;}
-.auth-field input{width:100%;padding:10px 12px;background:var(--bg-deep);border:1px solid var(--border-glow);border-radius:6px;color:var(--text-primary);font-family:var(--font-ui);font-size:14px;}
-.auth-field input:focus{outline:none;border-color:var(--accent-cyan);box-shadow:0 0 0 2px rgba(0,229,255,0.15);}
-.auth-btn{width:100%;padding:12px;margin-top:6px;background:var(--accent-blue);border:none;border-radius:6px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:opacity 0.2s;}
-.auth-btn:hover{opacity:0.85}
-.auth-btn:disabled{opacity:0.4;cursor:not-allowed}
-.auth-btn.secondary{background:transparent;border:1px solid var(--border-glow);color:var(--text-secondary);margin-top:8px;}
-.auth-btn.secondary:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
-.auth-msg{text-align:center;font-size:12px;margin-top:12px;min-height:18px;letter-spacing:0.5px;}
-.auth-msg.error{color:var(--accent-red)}
-.auth-msg.success{color:var(--accent-green)}
-.auth-msg.info{color:var(--accent-amber)}
-.auth-pending-box{text-align:center;padding:20px 0 8px;}
-.auth-pending-box .pending-icon{font-size:40px;margin-bottom:12px}
-.auth-pending-box p{color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 20px}
-.auth-pending-box strong{color:var(--accent-amber)}
-
-/* ======== ADMIN PANEL ======== */
-#adminPanel{
-  position:fixed;left:0;top:0;right:0;bottom:0;
-  background:rgba(2,6,14,0.97);z-index:50000;
-  display:none;flex-direction:column;
-  font-family:var(--font-ui);
-}
-#adminPanel.open{display:flex}
-#adminPanelHeader{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 16px;
-  background:var(--bg-panel);border-bottom:1px solid var(--border-glow);
+#profileToggle{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;cursor:pointer;
+  background:var(--bg-deep);
+  user-select:none;
   flex-shrink:0;
 }
-#adminPanelHeader h2{
+#profileToggle:hover{background:var(--bg-elevated)}
+.profile-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple));
+  display:flex;align-items:center;justify-content:center;
   font-family:var(--font-display);font-size:13px;font-weight:700;
-  letter-spacing:2px;color:var(--accent-amber);margin:0;flex:1;
+  color:#fff;flex-shrink:0;
+  box-shadow:0 0 8px rgba(0,170,255,0.35);
 }
-#adminUserList{
-  flex:1;overflow-y:auto;padding:14px;
+.profile-name-display{
+  flex:1;min-width:0;
 }
-.admin-user-card{
-  background:var(--bg-panel);border:1px solid var(--border-dim);
-  border-radius:8px;padding:12px 14px;margin-bottom:10px;
-  transition:border-color 0.2s;
+.profile-name-text{
+  font-family:var(--font-display);font-size:11px;font-weight:700;
+  color:var(--text-bright);letter-spacing:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.admin-user-card:hover{border-color:var(--border-glow)}
-.admin-user-card .au-name{
-  font-family:var(--font-display);font-size:13px;font-weight:700;
-  color:var(--text-bright);letter-spacing:1px;margin-bottom:2px;
+.profile-status-row{
+  display:flex;align-items:center;gap:5px;margin-top:2px;
 }
-.admin-user-card .au-email{
-  font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-bottom:6px;
+.profile-online-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent-green);
+  box-shadow:0 0 5px rgba(0,230,118,0.6);
+  flex-shrink:0;
 }
-.admin-user-card .au-meta{
-  font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;
+.profile-role-tag{
+  font-family:var(--font-mono);font-size:9px;
+  color:var(--text-dim);letter-spacing:0.5px;
 }
-.au-status-badge{
-  display:inline-block;padding:2px 8px;border-radius:4px;
-  font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:1px;
-  margin-right:6px;
+#profilePanel{
+  display:none;
+  padding:0 14px 12px;
+  background:var(--bg-card);
+  border-top:1px solid var(--border-dim);
 }
-.au-status-pending{background:rgba(255,171,0,0.15);color:var(--accent-amber);border:1px solid rgba(255,171,0,0.4);}
-.au-status-approved{background:rgba(0,230,118,0.12);color:var(--accent-green);border:1px solid rgba(0,230,118,0.4);}
-.au-status-banned{background:rgba(255,23,68,0.12);color:var(--accent-red);border:1px solid rgba(255,23,68,0.4);}
-.au-role-badge{
-  display:inline-block;padding:2px 8px;border-radius:4px;
-  font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:1px;
-  background:rgba(124,77,255,0.12);color:#b39ddb;border:1px solid rgba(124,77,255,0.4);
+.profile-email-row{
+  font-family:var(--font-mono);font-size:10px;
+  color:var(--text-dim);padding:8px 0 6px;
+  border-bottom:1px solid var(--border-dim);
+  margin-bottom:8px;
 }
-.admin-loading{text-align:center;padding:40px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);}
+.profile-edit-row{
+  display:flex;gap:6px;align-items:center;margin-bottom:6px;
+}
+.profile-edit-row input{
+  flex:1;font-size:12px;padding:7px 9px;margin:0;
+}
+.profile-msg{
+  font-family:var(--font-mono);font-size:10px;
+  min-height:14px;margin-bottom:6px;
+  letter-spacing:0.5px;
+}
+.profile-msg.success{color:var(--accent-green)}
+.profile-msg.error{color:var(--accent-red)}
+.profile-msg.info{color:var(--accent-amber)}
 
 /* ======== INSECURE OVERLAY ======== */
 #insecureOverlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;padding:24px}
@@ -1022,6 +987,40 @@ textarea{resize:vertical;min-height:55px}
       </div>
     </div>
   </div>
+
+<!-- ======== USER PROFILE PANEL ======== -->
+<div id="profileSection">
+  <div id="profileToggle" title="Click to expand profile">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <div class="profile-name-display">
+      <div class="profile-name-text" id="profileNameDisplay">Loading...</div>
+      <div class="profile-status-row">
+        <div class="profile-online-dot"></div>
+        <span class="profile-role-tag" id="profileRoleTag">ONLINE</span>
+      </div>
+    </div>
+    <span id="profileArrow" style="color:var(--text-dim);font-size:10px;flex-shrink:0">▶</span>
+  </div>
+  <div id="profilePanel">
+    <div class="profile-email-row" id="profileEmailDisplay">—</div>
+
+    <!-- Edit Display Name -->
+    <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;font-family:var(--font-display);font-weight:700;margin-bottom:4px">DISPLAY NAME</div>
+    <div class="profile-edit-row">
+      <input type="text" id="profileNameInput" placeholder="New display name" autocomplete="off">
+      <button class="btn small btn-green" id="profileSaveNameBtn" style="flex-shrink:0;white-space:nowrap">💾 SAVE</button>
+    </div>
+    <div class="profile-msg" id="profileNameMsg"></div>
+
+    <!-- Change Password -->
+    <button class="btn btn-amber full" id="profileChangePassBtn" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">🔑 CHANGE PASSWORD</button>
+    <div class="profile-msg" id="profilePassMsg"></div>
+
+    <!-- Logout -->
+    <button class="btn btn-red full" id="profileLogoutBtn" style="font-size:11px;letter-spacing:1px">⏻ SIGN OUT</button>
+  </div>
+</div>
+
 <!-- Map Layers -->
   <div class="section">
     <div class="section-label">Map Layer</div>
@@ -1288,9 +1287,6 @@ textarea{resize:vertical;min-height:55px}
     </div>
   </div>
 
-<div id="adminBtnContainer" style="display:none;padding:8px 14px 0">
-  <button id="openAdminPanelBtn" class="btn full" style="background:rgba(255,171,0,0.14);border-color:rgba(255,171,0,0.6);color:var(--accent-amber);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:1.5px">⚙️ ADMIN PANEL</button>
-</div>
 <div id="credit">SLAP-GAP · LT CDR SADMAN · P NO 3223</div>
 
   <!-- User Guide Button -->
@@ -1826,73 +1822,6 @@ textarea{resize:vertical;min-height:55px}
     </div>
   </div>
 </div>
-<!-- ======== AUTH SCREEN ======== -->
-<div id="authScreen">
-  <div class="auth-box">
-    <div class="auth-logo">SLAP-GAP</div>
-    <div class="auth-subtitle">AIR NAV · BANGLADESH NAVY</div>
-
-    <!-- LOGIN PANEL -->
-    <div id="authLogin">
-      <div class="auth-title">SIGN IN</div>
-      <div class="auth-field">
-        <label>EMAIL</label>
-        <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
-      </div>
-      <div class="auth-field">
-        <label>PASSWORD</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <button class="auth-btn" id="loginBtn">LOGIN</button>
-      <button class="auth-btn secondary" id="goRegisterBtn">NEW USER? REGISTER</button>
-      <div class="auth-msg" id="loginMsg"></div>
-    </div>
-
-    <!-- REGISTER PANEL -->
-    <div id="authRegister" style="display:none">
-      <div class="auth-title">CREATE ACCOUNT</div>
-      <div class="auth-field">
-        <label>DISPLAY NAME</label>
-        <input type="text" id="regName" placeholder="e.g. LT Rahman" autocomplete="off">
-      </div>
-      <div class="auth-field">
-        <label>EMAIL</label>
-        <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email">
-      </div>
-      <div class="auth-field">
-        <label>PASSWORD (min 6 characters)</label>
-        <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password">
-      </div>
-      <button class="auth-btn" id="registerBtn">REGISTER</button>
-      <button class="auth-btn secondary" id="goLoginBtn">BACK TO LOGIN</button>
-      <div class="auth-msg" id="registerMsg"></div>
-    </div>
-
-    <!-- PENDING APPROVAL PANEL -->
-    <div id="authPending" style="display:none">
-      <div class="auth-pending-box">
-        <div class="pending-icon">⏳</div>
-        <div class="auth-title">AWAITING APPROVAL</div>
-        <p>Your account has been created.<br>
-        Please wait for <strong>admin approval</strong><br>before you can access the system.</p>
-        <button class="auth-btn secondary" id="pendingLogoutBtn">SIGN OUT</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ======== ADMIN PANEL ======== -->
-<div id="adminPanel">
-  <div id="adminPanelHeader">
-    <h2>⚙️ ADMIN PANEL</h2>
-    <div id="adminCurrentUser" style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)"></div>
-    <button class="btn small btn-red" id="closeAdminPanelBtn">✖ CLOSE</button>
-  </div>
-  <div id="adminUserList">
-    <div class="admin-loading">Loading users...</div>
-  </div>
-</div>
-
 <!-- INSECURE OVERLAY -->
 <div id="insecureOverlay" aria-hidden="true">
   <div class="box">
@@ -5842,6 +5771,118 @@ if('serviceWorker'in navigator){
 })();
   // Area visibility accordion + User Guide — attached after login
 window.attachPostLoginHandlers = function(){
+
+  /* ================================================
+     PHASE 4 — USER PROFILE PANEL
+  ================================================ */
+  (function(){
+    var profileToggle  = document.getElementById('profileToggle');
+    var profilePanel   = document.getElementById('profilePanel');
+    var profileArrow   = document.getElementById('profileArrow');
+    var profileAvatar  = document.getElementById('profileAvatar');
+    var profileNameDisplay = document.getElementById('profileNameDisplay');
+    var profileEmailDisplay = document.getElementById('profileEmailDisplay');
+    var profileRoleTag = document.getElementById('profileRoleTag');
+    var profileNameInput = document.getElementById('profileNameInput');
+    var profileNameMsg = document.getElementById('profileNameMsg');
+    var profilePassMsg = document.getElementById('profilePassMsg');
+
+    // ── Populate profile from Firebase ──
+    function loadProfile(){
+      var user = fbAuth.currentUser;
+      if(!user) return;
+      fbDb.ref('users/'+user.uid).once('value').then(function(snap){
+        var data = snap.val() || {};
+        var name = data.displayName || user.email || 'USER';
+        var role = data.role || 'user';
+        var email = data.email || user.email || '—';
+        // Avatar: first letter of display name
+        profileAvatar.textContent = name.charAt(0).toUpperCase();
+        profileNameDisplay.textContent = name;
+        profileEmailDisplay.textContent = '✉ ' + email;
+        profileRoleTag.textContent = role === 'admin' ? '● ADMIN · ONLINE' : '● ONLINE';
+        profileNameInput.value = name;
+        profileNameInput.placeholder = name;
+      });
+    }
+
+    // ── Toggle open/close ──
+    profileToggle.onclick = function(){
+      var open = profilePanel.style.display === 'block';
+      profilePanel.style.display = open ? 'none' : 'block';
+      profileArrow.textContent = open ? '▶' : '▼';
+    };
+
+    // ── Save display name ──
+    document.getElementById('profileSaveNameBtn').onclick = function(){
+      var newName = profileNameInput.value.trim();
+      if(!newName){ setProfileMsg(profileNameMsg,'Enter a display name.','error'); return; }
+      var user = fbAuth.currentUser;
+      if(!user) return;
+      var btn = this; btn.disabled = true;
+      setProfileMsg(profileNameMsg,'Checking...','info');
+
+      // Get current name to remove old index entry
+      fbDb.ref('users/'+user.uid+'/displayName').once('value').then(function(snap){
+        var oldName = snap.val();
+        // Check if new name is taken (by someone else)
+        return fbDb.ref('displayNames/'+newName).once('value').then(function(taken){
+          if(taken.exists() && taken.val() !== user.uid){
+            btn.disabled = false;
+            setProfileMsg(profileNameMsg,'That name is already taken.','error');
+            return Promise.reject({handled:true});
+          }
+          // Write updates
+          var updates = {};
+          updates['users/'+user.uid+'/displayName'] = newName;
+          updates['displayNames/'+newName] = user.uid;
+          if(oldName && oldName !== newName){
+            updates['displayNames/'+oldName] = null; // remove old index
+          }
+          return fbDb.ref().update(updates);
+        });
+      }).then(function(){
+        btn.disabled = false;
+        profileAvatar.textContent = newName.charAt(0).toUpperCase();
+        profileNameDisplay.textContent = newName;
+        setProfileMsg(profileNameMsg,'Display name updated!','success');
+        setTimeout(function(){ setProfileMsg(profileNameMsg,'',''); }, 3000);
+      }).catch(function(err){
+        if(err && err.handled) return;
+        btn.disabled = false;
+        setProfileMsg(profileNameMsg,'Error saving name.','error');
+      });
+    };
+
+    // ── Change password ──
+    document.getElementById('profileChangePassBtn').onclick = function(){
+      var user = fbAuth.currentUser;
+      if(!user || !user.email) return;
+      fbAuth.sendPasswordResetEmail(user.email).then(function(){
+        setProfileMsg(profilePassMsg,'Reset email sent to '+user.email,'success');
+        setTimeout(function(){ setProfileMsg(profilePassMsg,'',''); }, 5000);
+      }).catch(function(err){
+        setProfileMsg(profilePassMsg,'Error: '+err.message,'error');
+      });
+    };
+
+    // ── Logout ──
+    document.getElementById('profileLogoutBtn').onclick = function(){
+      if(confirm('Sign out of SLAP-GAP Air Nav?')){
+        fbAuth.signOut();
+      }
+    };
+
+    function setProfileMsg(el, text, type){
+      el.textContent = text;
+      el.className = 'profile-msg' + (type ? ' '+type : '');
+    }
+
+    // Load profile on init
+    loadProfile();
+
+  })();
+
   document.getElementById('areaVisToggle').onclick=function(){
     const panel=document.getElementById('areaVisPanel');
     const arrow=document.getElementById('areaVisArrow');
@@ -5872,316 +5913,7 @@ window.attachPostLoginHandlers = function(){
     overlay.style.display = 'none';
   };
 })();
-
-/* ====================================================
-   FIREBASE AUTH GATE + ADMIN PANEL
-==================================================== */
-(function(){
-
-  var authScreen   = document.getElementById('authScreen');
-  var authLogin    = document.getElementById('authLogin');
-  var authRegister = document.getElementById('authRegister');
-  var authPending  = document.getElementById('authPending');
-
-  // Current logged-in user's data
-  var currentUserData = null;
-
-  /* ── Panel switchers ── */
-  document.getElementById('goRegisterBtn').onclick = function(){
-    authLogin.style.display = 'none';
-    authRegister.style.display = 'block';
-    authPending.style.display = 'none';
-    setMsg('loginMsg','','');
-  };
-  document.getElementById('goLoginBtn').onclick = function(){
-    authLogin.style.display = 'block';
-    authRegister.style.display = 'none';
-    authPending.style.display = 'none';
-    setMsg('registerMsg','','');
-  };
-
-  function setMsg(id, text, type){
-    var el = document.getElementById(id);
-    el.textContent = text;
-    el.className = 'auth-msg' + (type ? ' ' + type : '');
-  }
-
-  function showPanel(panel){
-    authLogin.style.display    = panel==='login'    ? 'block' : 'none';
-    authRegister.style.display = panel==='register' ? 'block' : 'none';
-    authPending.style.display  = panel==='pending'  ? 'block' : 'none';
-  }
-
-  /* ── LOGIN ── */
-  document.getElementById('loginBtn').onclick = function(){
-    var email    = document.getElementById('loginEmail').value.trim();
-    var password = document.getElementById('loginPassword').value;
-    if(!email || !password){ setMsg('loginMsg','Enter email and password.','error'); return; }
-    var btn = this; btn.disabled = true; btn.textContent = 'SIGNING IN...';
-    setMsg('loginMsg','','');
-    fbAuth.signInWithEmailAndPassword(email, password)
-      .catch(function(err){
-        btn.disabled = false; btn.textContent = 'LOGIN';
-        var msg = 'Login failed. Check your credentials.';
-        if(err.code==='auth/user-not-found')    msg = 'No account found with that email.';
-        if(err.code==='auth/wrong-password')    msg = 'Incorrect password.';
-        if(err.code==='auth/too-many-requests') msg = 'Too many attempts. Try again later.';
-        if(err.code==='auth/invalid-credential') msg = 'Incorrect email or password.';
-        setMsg('loginMsg', msg, 'error');
-      });
-  };
-
-  /* ── REGISTER ── */
-  document.getElementById('registerBtn').onclick = function(){
-    var name     = document.getElementById('regName').value.trim();
-    var email    = document.getElementById('regEmail').value.trim();
-    var password = document.getElementById('regPassword').value;
-    if(!name)             { setMsg('registerMsg','Display name is required.','error'); return; }
-    if(!email)            { setMsg('registerMsg','Email is required.','error'); return; }
-    if(password.length<6) { setMsg('registerMsg','Password must be at least 6 characters.','error'); return; }
-    var btn = this; btn.disabled = true; btn.textContent = 'CREATING...';
-    setMsg('registerMsg','','');
-    fbDb.ref('displayNames/' + name).once('value').then(function(snap){
-      if(snap.exists()){
-        btn.disabled = false; btn.textContent = 'REGISTER';
-        setMsg('registerMsg','That display name is already taken.','error');
-        return Promise.reject({handled:true});
-      }
-      return fbAuth.createUserWithEmailAndPassword(email, password);
-    }).then(function(cred){
-      var uid = cred.user.uid, now = Date.now(), updates = {};
-      updates['users/'+uid+'/email']       = email;
-      updates['users/'+uid+'/displayName'] = name;
-      updates['users/'+uid+'/status']      = 'pending';
-      updates['users/'+uid+'/role']        = 'user';
-      updates['users/'+uid+'/joinedAt']    = now;
-      updates['displayNames/'+name]        = uid;
-      return fbDb.ref().update(updates);
-    }).then(function(){
-      btn.disabled = false; btn.textContent = 'REGISTER';
-      setMsg('registerMsg','Account created! Awaiting admin approval.','success');
-    }).catch(function(err){
-      if(err && err.handled) return;
-      btn.disabled = false; btn.textContent = 'REGISTER';
-      var msg = 'Registration failed. Try again.';
-      if(err.code==='auth/email-already-in-use') msg = 'That email is already registered.';
-      if(err.code==='auth/invalid-email')        msg = 'Invalid email address.';
-      setMsg('registerMsg', msg, 'error');
-    });
-  };
-
-  /* ── PENDING LOGOUT ── */
-  document.getElementById('pendingLogoutBtn').onclick = function(){ fbAuth.signOut(); };
-
-  /* ── AUTH STATE OBSERVER ── */
-  fbAuth.onAuthStateChanged(function(user){
-    if(!user){
-      authScreen.classList.remove('hidden');
-      showPanel('login');
-      document.getElementById('loginBtn').disabled = false;
-      document.getElementById('loginBtn').textContent = 'LOGIN';
-      document.getElementById('adminBtnContainer').style.display = 'none';
-      currentUserData = null;
-      return;
-    }
-    fbDb.ref('users/'+user.uid).once('value').then(function(snap){
-      var data = snap.val() || {};
-      currentUserData = data;
-      currentUserData.uid = user.uid;
-      if(data.status === 'approved'){
-        authScreen.classList.add('hidden');
-        // Show admin button only for admins
-        if(data.role === 'admin'){
-          document.getElementById('adminBtnContainer').style.display = 'block';
-        }
-        if(!window._appInitialized){
-          window._appInitialized = true;
-          initializeApp();
-        }
-      } else if(data.status === 'banned'){
-        fbAuth.signOut();
-        authScreen.classList.remove('hidden');
-        showPanel('login');
-        setMsg('loginMsg','Your account has been suspended. Contact admin.','error');
-      } else {
-        authScreen.classList.remove('hidden');
-        showPanel('pending');
-      }
-    }).catch(function(){
-      authScreen.classList.remove('hidden');
-      showPanel('pending');
-    });
-  });
-
-  /* ══════════════════════════════════════════════
-     ADMIN PANEL
-  ══════════════════════════════════════════════ */
-
-  var adminPanel = document.getElementById('adminPanel');
-
-  document.getElementById('openAdminPanelBtn').onclick = function(){
-    adminPanel.classList.add('open');
-    loadAdminUsers();
-  };
-  document.getElementById('closeAdminPanelBtn').onclick = function(){
-    adminPanel.classList.remove('open');
-  };
-
-  function loadAdminUsers(){
-    var list = document.getElementById('adminUserList');
-    var info = document.getElementById('adminCurrentUser');
-    list.innerHTML = '<div class="admin-loading">Loading users...</div>';
-    if(currentUserData){
-      info.textContent = 'Logged in as: ' + (currentUserData.displayName || currentUserData.email || '');
-    }
-    fbDb.ref('users').once('value').then(function(snap){
-      var users = snap.val();
-      if(!users){
-        list.innerHTML = '<div class="admin-loading">No users found.</div>';
-        return;
-      }
-      list.innerHTML = '';
-      // Sort: pending first, then approved, then banned
-      var arr = Object.keys(users).map(function(uid){
-        return Object.assign({}, users[uid], {uid: uid});
-      });
-      var order = {pending:0, approved:1, banned:2};
-      arr.sort(function(a,b){ return (order[a.status]||9) - (order[b.status]||9); });
-
-      arr.forEach(function(u){
-        var card = document.createElement('div');
-        card.className = 'admin-user-card';
-        var statusCls = 'au-status-' + (u.status || 'pending');
-        var statusLabel = (u.status || 'pending').toUpperCase();
-        var roleLabel = (u.role || 'user').toUpperCase();
-        var joinDate = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-        var isSelf = currentUserData && u.uid === currentUserData.uid;
-
-        card.innerHTML =
-          '<div class="au-name">' + (u.displayName || '(no name)') + (isSelf?' <span style="color:var(--text-dim);font-size:10px">(you)</span>':'') + '</div>' +
-          '<div class="au-email">' + (u.email || '—') + '</div>' +
-          '<div class="au-meta">' +
-            '<span class="au-status-badge ' + statusCls + '">' + statusLabel + '</span>' +
-            '<span class="au-role-badge">' + roleLabel + '</span>' +
-            ' &nbsp; Joined: ' + joinDate +
-          '</div>' +
-          '<div class="btn-row" id="actions-'+u.uid+'"></div>';
-
-        list.appendChild(card);
-        renderAdminActions(u, isSelf);
-      });
-    }).catch(function(err){
-      list.innerHTML = '<div class="admin-loading" style="color:var(--accent-red)">Error loading users: ' + err.message + '</div>';
-    });
-  }
-
-  function renderAdminActions(u, isSelf){
-    var row = document.getElementById('actions-'+u.uid);
-    if(!row) return;
-    row.innerHTML = '';
-
-    // APPROVE button — show if pending or banned
-    if(u.status !== 'approved'){
-      var approveBtn = document.createElement('a');
-      approveBtn.className = 'btn small btn-green';
-      approveBtn.textContent = '✅ APPROVE';
-      approveBtn.onclick = function(){
-        fbDb.ref('users/'+u.uid+'/status').set('approved').then(function(){
-          u.status = 'approved';
-          updateCardStatus(u);
-          renderAdminActions(u, isSelf);
-        });
-      };
-      row.appendChild(approveBtn);
-    }
-
-    // BAN button — show if approved and not self
-    if(u.status === 'approved' && !isSelf){
-      var banBtn = document.createElement('a');
-      banBtn.className = 'btn small btn-red';
-      banBtn.textContent = '🚫 BAN';
-      banBtn.onclick = function(){
-        if(!confirm('Ban ' + (u.displayName||u.email) + '? They will be immediately locked out.')) return;
-        fbDb.ref('users/'+u.uid+'/status').set('banned').then(function(){
-          u.status = 'banned';
-          updateCardStatus(u);
-          renderAdminActions(u, isSelf);
-        });
-      };
-      row.appendChild(banBtn);
-    }
-
-    // MAKE ADMIN button — show if role is user and not self
-    if(u.role !== 'admin' && !isSelf){
-      var adminBtn = document.createElement('a');
-      adminBtn.className = 'btn small btn-amber';
-      adminBtn.textContent = '⭐ MAKE ADMIN';
-      adminBtn.onclick = function(){
-        if(!confirm('Give admin rights to ' + (u.displayName||u.email) + '?')) return;
-        fbDb.ref('users/'+u.uid+'/role').set('admin').then(function(){
-          u.role = 'admin';
-          renderAdminActions(u, isSelf);
-          updateCardRole(u);
-        });
-      };
-      row.appendChild(adminBtn);
-    }
-
-    // REMOVE ADMIN — show if admin and not self
-    if(u.role === 'admin' && !isSelf){
-      var removeAdminBtn = document.createElement('a');
-      removeAdminBtn.className = 'btn small btn-purple';
-      removeAdminBtn.textContent = '↓ REMOVE ADMIN';
-      removeAdminBtn.onclick = function(){
-        if(!confirm('Remove admin rights from ' + (u.displayName||u.email) + '?')) return;
-        fbDb.ref('users/'+u.uid+'/role').set('user').then(function(){
-          u.role = 'user';
-          renderAdminActions(u, isSelf);
-          updateCardRole(u);
-        });
-      };
-      row.appendChild(removeAdminBtn);
-    }
-
-    // DELETE button — not self
-    if(!isSelf){
-      var deleteBtn = document.createElement('a');
-      deleteBtn.className = 'btn small btn-red';
-      deleteBtn.style.cssText = 'background:rgba(255,23,68,0.25)';
-      deleteBtn.textContent = '🗑 DELETE';
-      deleteBtn.onclick = function(){
-       if(!confirm('Permanently delete ' + (u.displayName||u.email) + ' from the database?\n\nNote: This removes their data. They can still log in until their Firebase Auth account is also removed.')) return;
-        // Remove from DB
-        var delUpdates = {};
-        delUpdates['users/'+u.uid] = null;
-        if(u.displayName) delUpdates['displayNames/'+u.displayName] = null;
-        fbDb.ref().update(delUpdates).then(function(){
-          var card = row.closest('.admin-user-card');
-          if(card) card.remove();
-        });
-      };
-      row.appendChild(deleteBtn);
-    }
-  }
-
-  function updateCardStatus(u){
-    var card = document.getElementById('actions-'+u.uid);
-    if(!card) return;
-    var badge = card.closest('.admin-user-card').querySelector('.au-status-badge');
-    if(badge){
-      badge.className = 'au-status-badge au-status-' + u.status;
-      badge.textContent = u.status.toUpperCase();
-    }
-  }
-
-  function updateCardRole(u){
-    var card = document.getElementById('actions-'+u.uid);
-    if(!card) return;
-    var badge = card.closest('.admin-user-card').querySelector('.au-role-badge');
-    if(badge) badge.textContent = u.role.toUpperCase();
-  }
-
-})();
+initializeApp();
 </script>
 
 <!-- Dark Leaflet overrides -->
