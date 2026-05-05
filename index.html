@@ -6150,9 +6150,7 @@ window.attachPostLoginHandlers = function(){
       deleteBtn.style.cssText = 'background:rgba(255,23,68,0.25)';
       deleteBtn.textContent = '🗑 DELETE';
       deleteBtn.onclick = function(){
-        if(!confirm('Permanently delete ' + (u.displayName||u.email) + ' from the database?
-
-Note: This removes their data. They can still log in until their Firebase Auth account is also removed.')) return;
+       if(!confirm('Permanently delete ' + (u.displayName||u.email) + ' from the database?\n\nNote: This removes their data. They can still log in until their Firebase Auth account is also removed.')) return;
         // Remove from DB
         var delUpdates = {};
         delUpdates['users/'+u.uid] = null;
