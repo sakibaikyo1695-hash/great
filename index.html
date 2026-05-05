@@ -574,6 +574,89 @@ textarea{resize:vertical;min-height:55px}
   color:var(--text-dim);text-align:center;padding:12px 0;
 }
 
+/* ======== CHAT OVERLAY ======== */
+#chatOverlay{
+  position:fixed;left:0;top:0;right:0;bottom:0;
+  background:var(--bg-deep);z-index:60000;
+  display:none;flex-direction:column;font-family:var(--font-ui);
+}
+#chatOverlay.open{display:flex}
+#chatHeader{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;background:var(--bg-panel);
+  border-bottom:1px solid var(--border-glow);flex-shrink:0;
+}
+#chatHeaderName{
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  letter-spacing:1.5px;color:var(--accent-cyan);flex:1;
+}
+#chatHeaderStatus{
+  font-family:var(--font-mono);font-size:10px;color:var(--text-dim);
+}
+#chatMessages{
+  flex:1;overflow-y:auto;padding:12px 14px;
+  display:flex;flex-direction:column;gap:8px;
+  -webkit-overflow-scrolling:touch;
+}
+#chatMessages::-webkit-scrollbar{width:3px}
+#chatMessages::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
+.chat-msg{
+  max-width:78%;padding:9px 12px;border-radius:12px;
+  font-size:13px;line-height:1.5;word-break:break-word;
+}
+.chat-msg.mine{
+  align-self:flex-end;
+  background:rgba(0,170,255,0.2);
+  border:1px solid rgba(0,170,255,0.35);
+  border-bottom-right-radius:3px;
+  color:var(--text-bright);
+}
+.chat-msg.theirs{
+  align-self:flex-start;
+  background:var(--bg-elevated);
+  border:1px solid var(--border-dim);
+  border-bottom-left-radius:3px;
+  color:var(--text-primary);
+}
+.chat-msg-time{
+  font-size:9px;color:var(--text-dim);
+  margin-top:3px;font-family:var(--font-mono);
+}
+.chat-msg.mine .chat-msg-time{text-align:right}
+#chatInputRow{
+  display:flex;gap:8px;align-items:center;
+  padding:10px 14px;background:var(--bg-panel);
+  border-top:1px solid var(--border-dim);flex-shrink:0;
+}
+#chatInput{
+  flex:1;padding:10px 12px;
+  background:var(--bg-deep);color:var(--text-primary);
+  border:1px solid var(--border-glow);border-radius:20px;
+  font-family:var(--font-ui);font-size:13px;outline:none;
+  -webkit-appearance:none;
+}
+#chatInput:focus{border-color:var(--accent-cyan);}
+#chatSendBtn{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--accent-blue);border:none;
+  color:#000;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:opacity 0.2s;
+}
+#chatSendBtn:active{opacity:0.7}
+.chat-date-divider{
+  text-align:center;font-family:var(--font-mono);
+  font-size:9px;color:var(--text-dim);
+  padding:4px 0;letter-spacing:1px;
+}
+/* Unread badge on CREW toggle */
+#crewUnreadBadge{
+  background:var(--accent-red);color:#fff;
+  border-radius:10px;padding:1px 6px;
+  font-family:var(--font-display);font-size:9px;font-weight:700;
+  display:none;
+}
+
 /* ======== INSECURE OVERLAY ======== */
 #insecureOverlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;padding:24px}
 #insecureOverlay .box{background:var(--bg-panel);border:1px solid var(--border-glow);padding:20px;border-radius:10px;max-width:720px;margin:auto;color:var(--text-primary)}
@@ -1060,6 +1143,7 @@ textarea{resize:vertical;min-height:55px}
   <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 6px;cursor:pointer;background:var(--bg-deep);border-top:2px solid var(--accent-green)" id="crewToggle">
     <span style="font-size:14px">👥</span>
     <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-bright);letter-spacing:1px;flex:1">CREW</span>
+    <span id="crewUnreadBadge">0</span>
     <span id="crewOnlineCount" style="font-family:var(--font-mono);font-size:10px;color:var(--accent-green)"></span>
     <span id="crewArrow" style="color:var(--text-dim);font-size:10px">▶</span>
   </div>
@@ -6025,6 +6109,8 @@ window.attachPostLoginHandlers = function(){
         })();
         // ────────────────────────────────────────────────────────────
 
+        // Set chat user
+        if(window._setChatUser) window._setChatUser(user.uid);
         if(!window._appInitialized){ window._appInitialized=true; initializeApp(); }
       } else if(data.status==='banned'){
         fbAuth.signOut(); authScreen.classList.remove('hidden'); showPanel('login');
@@ -6132,7 +6218,10 @@ window.attachPostLoginHandlers = function(){
         item.innerHTML =
           '<div class="crew-presence-dot ' + (u.online?'online':'offline') + '"></div>' +
           '<div class="crew-item-name">' + (u.displayName||'Unknown') + '</div>' +
-          '<div class="crew-item-status">' + (u.online ? '● ONLINE' : fmtSeen(u.lastSeen)) + '</div>';
+          '<div class="crew-item-status">' + (u.online ? '● ONLINE' : fmtSeen(u.lastSeen)) + '</div>' +
+          '<span style="font-size:10px;color:var(--accent-cyan);font-family:var(--font-mono);margin-left:4px">💬</span>';
+        item.style.cursor = 'pointer';
+        (function(capturedUid){ item.onclick = function(){ openChat(capturedUid); }; })(uid);
         crewResults.appendChild(item);
       });
       // Update online count badge
@@ -6169,12 +6258,175 @@ window.attachPostLoginHandlers = function(){
         });
         renderCrew(crewSearch.value.trim());
       });
+      // Expose allUsers for chat system
+      window._crewAllUsers = _allUsers;
     }
 
     // Search input
     crewSearch.addEventListener('input', function(){
       renderCrew(this.value.trim());
     });
+
+  })();
+
+  /* ── CHAT SYSTEM ── */
+  (function(){
+    var chatOverlay    = document.getElementById('chatOverlay');
+    var chatMessages   = document.getElementById('chatMessages');
+    var chatInput      = document.getElementById('chatInput');
+    var chatSendBtn    = document.getElementById('chatSendBtn');
+    var chatHeaderName = document.getElementById('chatHeaderName');
+    var chatHeaderStatus = document.getElementById('chatHeaderStatus');
+    var chatHeaderDot  = document.getElementById('chatHeaderDot');
+    var chatCloseBtn   = document.getElementById('chatCloseBtn');
+    var crewUnreadBadge = document.getElementById('crewUnreadBadge');
+
+    var _chatPeerId    = null;  // uid of the person we're chatting with
+    var _chatPeerName  = null;
+    var _chatRef       = null;  // Firebase ref for this conversation
+    var _chatListener  = null;  // onChildAdded listener
+    var _unreadListeners = {};  // uid → listener for unread tracking
+    var _totalUnread   = 0;
+    var _myUid         = null;
+
+    // Called after login to set current user uid
+    window._setChatUser = function(uid){ _myUid = uid; startUnreadWatcher(); };
+
+    // ── Chat key — always smaller uid first for consistency ──────────
+    function chatKey(uid1, uid2){
+      return uid1 < uid2 ? uid1 + '_' + uid2 : uid2 + '_' + uid1;
+    }
+
+    // ── Format timestamp ─────────────────────────────────────────────
+    function fmtTime(ts){
+      if(!ts) return '';
+      var d = new Date(ts);
+      var h = String(d.getHours()).padStart(2,'0');
+      var m = String(d.getMinutes()).padStart(2,'0');
+      return h + ':' + m;
+    }
+    function fmtDateLabel(ts){
+      var d = new Date(ts);
+      return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'});
+    }
+
+    // ── Open chat with a peer ────────────────────────────────────────
+    window.openChat = function(peerUid){
+      if(!_myUid) return;
+      _chatPeerId = peerUid;
+
+      // Get peer name from allUsers cache
+      var allUsers = window._crewAllUsers || {};
+      _chatPeerName = (allUsers[peerUid] && allUsers[peerUid].displayName) || 'Crew Member';
+
+      chatHeaderName.textContent = _chatPeerName;
+      chatHeaderStatus.textContent = '';
+
+      // Presence dot for peer
+      var peerOnline = allUsers[peerUid] && allUsers[peerUid].online;
+      chatHeaderDot.className = 'crew-presence-dot ' + (peerOnline ? 'online' : 'offline');
+
+      // Open overlay
+      chatOverlay.classList.add('open');
+      chatMessages.innerHTML = '';
+      chatInput.value = '';
+      chatInput.focus();
+
+      // Detach old listener
+      if(_chatListener && _chatRef){
+        _chatRef.off('child_added', _chatListener);
+        _chatListener = null;
+      }
+
+      var key = chatKey(_myUid, peerUid);
+      _chatRef = fbDb.ref('chats/' + key + '/messages');
+
+      // Mark messages as read
+      markRead(peerUid);
+
+      // Load messages
+      var lastDateLabel = '';
+      _chatListener = _chatRef.limitToLast(100).on('child_added', function(snap){
+        var msg = snap.val();
+        if(!msg) return;
+
+        // Date divider
+        var dateLabel = fmtDateLabel(msg.timestamp);
+        if(dateLabel !== lastDateLabel){
+          lastDateLabel = dateLabel;
+          var div = document.createElement('div');
+          div.className = 'chat-date-divider';
+          div.textContent = '── ' + dateLabel + ' ──';
+          chatMessages.appendChild(div);
+        }
+
+        var isMine = msg.from === _myUid;
+        var bubble = document.createElement('div');
+        bubble.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
+        bubble.innerHTML =
+          '<div>' + escapeHtml(msg.text) + '</div>' +
+          '<div class="chat-msg-time">' + fmtTime(msg.timestamp) + '</div>';
+        chatMessages.appendChild(bubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Mark read if chat is open
+        if(_chatPeerId === peerUid) markRead(peerUid);
+      });
+    };
+
+    // ── Escape HTML ──────────────────────────────────────────────────
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Send message ─────────────────────────────────────────────────
+    function sendMessage(){
+      var text = chatInput.value.trim();
+      if(!text || !_chatRef || !_myUid) return;
+      chatInput.value = '';
+      var msg = { from: _myUid, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
+      _chatRef.push(msg);
+      // Write unread marker for peer
+      fbDb.ref('unread/' + _chatPeerId + '/' + _myUid).set(firebase.database.ServerValue.TIMESTAMP);
+    }
+
+    chatSendBtn.onclick = sendMessage;
+    chatInput.addEventListener('keypress', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); }
+    });
+
+    // ── Close chat ───────────────────────────────────────────────────
+    chatCloseBtn.onclick = function(){
+      chatOverlay.classList.remove('open');
+      if(_chatListener && _chatRef){
+        _chatRef.off('child_added', _chatListener);
+        _chatListener = null;
+      }
+      _chatPeerId = null;
+    };
+
+    // ── Mark messages as read ────────────────────────────────────────
+    function markRead(peerUid){
+      if(!_myUid) return;
+      fbDb.ref('unread/' + _myUid + '/' + peerUid).remove();
+    }
+
+    // ── Watch unread counts across all peers ─────────────────────────
+    function startUnreadWatcher(){
+      if(!_myUid) return;
+      fbDb.ref('unread/' + _myUid).on('value', function(snap){
+        var data = snap.val() || {};
+        _totalUnread = Object.keys(data).length;
+        if(_totalUnread > 0){
+          crewUnreadBadge.textContent = _totalUnread;
+          crewUnreadBadge.style.display = 'inline-block';
+        } else {
+          crewUnreadBadge.style.display = 'none';
+        }
+      });
+    }
 
   })();
 
@@ -6244,5 +6496,22 @@ window.attachPostLoginHandlers = function(){
 .leaflet-control-attribution{background:rgba(4,8,15,0.7) !important;color:var(--text-dim) !important;font-size:9px !important}
 .leaflet-control-attribution a{color:var(--text-dim) !important}
 </style>
+<!-- CHAT OVERLAY -->
+<div id="chatOverlay">
+  <div id="chatHeader">
+    <button class="btn small btn-red" id="chatCloseBtn" style="flex-shrink:0">✖ CLOSE</button>
+    <div>
+      <div id="chatHeaderName">—</div>
+      <div id="chatHeaderStatus"></div>
+    </div>
+    <div id="chatHeaderDot" class="crew-presence-dot offline" style="margin-left:auto"></div>
+  </div>
+  <div id="chatMessages"></div>
+  <div id="chatInputRow">
+    <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" maxlength="500">
+    <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
 </body>
 </html>
