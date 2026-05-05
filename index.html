@@ -539,6 +539,41 @@ textarea{resize:vertical;min-height:55px}
 .profile-msg{font-family:var(--font-mono);font-size:10px;min-height:14px;margin-bottom:6px;letter-spacing:0.5px;}
 .profile-msg.success{color:var(--accent-green)}.profile-msg.error{color:var(--accent-red)}.profile-msg.info{color:var(--accent-amber)}
 
+/* ======== CREW SECTION ======== */
+#crewSection{border-bottom:2px solid var(--border-dim);}
+#crewSearchInput{
+  width:100%;padding:8px 10px;margin:0 0 8px;
+  background:var(--bg-deep);color:var(--text-primary);
+  border:1px solid var(--border-glow);border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;
+}
+#crewSearchInput:focus{border-color:var(--accent-cyan);box-shadow:var(--glow-blue);}
+#crewResults{max-height:220px;overflow-y:auto;}
+.crew-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 0;border-bottom:1px solid var(--border-dim);
+}
+.crew-item:last-child{border-bottom:none}
+.crew-presence-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.crew-presence-dot.online{
+  background:var(--accent-green);
+  box-shadow:0 0 6px rgba(0,230,118,0.7);
+}
+.crew-presence-dot.offline{background:#3a5070;}
+.crew-item-name{
+  flex:1;font-family:var(--font-display);font-size:11px;
+  font-weight:700;color:var(--text-bright);letter-spacing:0.5px;
+}
+.crew-item-status{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-dim);
+}
+.crew-empty{
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--text-dim);text-align:center;padding:12px 0;
+}
+
 /* ======== INSECURE OVERLAY ======== */
 #insecureOverlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;padding:24px}
 #insecureOverlay .box{background:var(--bg-panel);border:1px solid var(--border-glow);padding:20px;border-radius:10px;max-width:720px;margin:auto;color:var(--text-primary)}
@@ -1017,6 +1052,20 @@ textarea{resize:vertical;min-height:55px}
     <button class="btn btn-amber full" id="profileChangePassBtn" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">🔑 CHANGE PASSWORD</button>
     <div class="profile-msg" id="profilePassMsg"></div>
     <button class="btn btn-red full" id="profileLogoutBtn" style="font-size:11px;letter-spacing:1px">⏻ SIGN OUT</button>
+  </div>
+</div>
+
+<!-- CREW SECTION -->
+<div id="crewSection">
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 6px;cursor:pointer;background:var(--bg-deep);border-top:2px solid var(--accent-green)" id="crewToggle">
+    <span style="font-size:14px">👥</span>
+    <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-bright);letter-spacing:1px;flex:1">CREW</span>
+    <span id="crewOnlineCount" style="font-family:var(--font-mono);font-size:10px;color:var(--accent-green)"></span>
+    <span id="crewArrow" style="color:var(--text-dim);font-size:10px">▶</span>
+  </div>
+  <div id="crewPanel" style="display:none;padding:8px 14px 10px;background:var(--bg-card);">
+    <input type="text" id="crewSearchInput" placeholder="🔍 Search crew by name..." autocomplete="off">
+    <div id="crewResults"><div class="crew-empty">Type a name to search</div></div>
   </div>
 </div>
 
@@ -5963,6 +6012,19 @@ window.attachPostLoginHandlers = function(){
         }
         // ────────────────────────────────────────────────────────────
 
+        // ── Online Presence ──────────────────────────────────────
+        (function(){
+          var presRef = fbDb.ref('presence/' + user.uid);
+          var connRef = fbDb.ref('.info/connected');
+          connRef.on('value', function(snap){
+            if(snap.val() === true){
+              presRef.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+              presRef.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+            }
+          });
+        })();
+        // ────────────────────────────────────────────────────────────
+
         if(!window._appInitialized){ window._appInitialized=true; initializeApp(); }
       } else if(data.status==='banned'){
         fbAuth.signOut(); authScreen.classList.remove('hidden'); showPanel('login');
@@ -6015,6 +6077,106 @@ window.attachPostLoginHandlers = function(){
     if(type==='status'){ var b=card.querySelector('.au-status-badge'); if(b){ b.className='au-status-badge au-status-'+u.status; b.textContent=u.status.toUpperCase(); } }
     if(type==='role'){ var b=card.querySelector('.au-role-badge'); if(b) b.textContent=u.role.toUpperCase(); }
   }
+
+  /* ── CREW PANEL ── */
+  (function(){
+    var crewToggle   = document.getElementById('crewToggle');
+    var crewPanel    = document.getElementById('crewPanel');
+    var crewArrow    = document.getElementById('crewArrow');
+    var crewSearch   = document.getElementById('crewSearchInput');
+    var crewResults  = document.getElementById('crewResults');
+    var crewCount    = document.getElementById('crewOnlineCount');
+    var _allUsers    = {};   // uid → {displayName, online, lastSeen}
+    var _presListeners = {}; // uid → listener ref
+
+    // Toggle open/close
+    crewToggle.onclick = function(){
+      var open = crewPanel.style.display === 'block';
+      crewPanel.style.display = open ? 'none' : 'block';
+      crewArrow.textContent   = open ? '▶' : '▼';
+      if(!open){ loadCrew(); crewSearch.focus(); }
+    };
+
+    // Format last seen
+    function fmtSeen(ts){
+      if(!ts) return 'Unknown';
+      var diff = Math.floor((Date.now() - ts) / 1000);
+      if(diff < 60)  return 'Just now';
+      if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+      if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+      return Math.floor(diff/86400) + 'd ago';
+    }
+
+    // Render results list
+    function renderCrew(filter){
+      crewResults.innerHTML = '';
+      var keys = Object.keys(_allUsers);
+      if(filter) keys = keys.filter(function(uid){
+        return _allUsers[uid].displayName.toLowerCase().includes(filter.toLowerCase());
+      });
+      if(keys.length === 0){
+        crewResults.innerHTML = '<div class="crew-empty">' + (filter ? 'No crew found' : 'No crew loaded yet') + '</div>';
+        return;
+      }
+      // Sort: online first, then alphabetical
+      keys.sort(function(a,b){
+        var ua = _allUsers[a], ub = _allUsers[b];
+        if(ua.online && !ub.online) return -1;
+        if(!ua.online && ub.online) return 1;
+        return (ua.displayName||'').localeCompare(ub.displayName||'');
+      });
+      keys.forEach(function(uid){
+        var u = _allUsers[uid];
+        var item = document.createElement('div');
+        item.className = 'crew-item';
+        item.innerHTML =
+          '<div class="crew-presence-dot ' + (u.online?'online':'offline') + '"></div>' +
+          '<div class="crew-item-name">' + (u.displayName||'Unknown') + '</div>' +
+          '<div class="crew-item-status">' + (u.online ? '● ONLINE' : fmtSeen(u.lastSeen)) + '</div>';
+        crewResults.appendChild(item);
+      });
+      // Update online count badge
+      var onlineCount = keys.filter(function(uid){ return _allUsers[uid].online; }).length;
+      crewCount.textContent = onlineCount > 0 ? onlineCount + ' online' : '';
+    }
+
+    // Load all approved users + listen to their presence
+    function loadCrew(){
+      fbDb.ref('users').once('value').then(function(snap){
+        var users = snap.val() || {};
+        // Detach old listeners
+        Object.keys(_presListeners).forEach(function(uid){
+          fbDb.ref('presence/'+uid).off('value', _presListeners[uid]);
+        });
+        _presListeners = {};
+        _allUsers = {};
+
+        Object.keys(users).forEach(function(uid){
+          var u = users[uid];
+          if(u.status !== 'approved') return; // only approved crew
+          _allUsers[uid] = { displayName: u.displayName || u.email || 'Unknown', online: false, lastSeen: null };
+
+          // Real-time presence listener
+          var fn = fbDb.ref('presence/'+uid).on('value', function(pSnap){
+            var p = pSnap.val() || {};
+            if(_allUsers[uid]){
+              _allUsers[uid].online   = p.online === true;
+              _allUsers[uid].lastSeen = p.lastSeen || null;
+            }
+            renderCrew(crewSearch.value.trim());
+          });
+          _presListeners[uid] = fn;
+        });
+        renderCrew(crewSearch.value.trim());
+      });
+    }
+
+    // Search input
+    crewSearch.addEventListener('input', function(){
+      renderCrew(this.value.trim());
+    });
+
+  })();
 
   /* ── PROFILE PANEL ── */
   (function(){
