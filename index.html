@@ -6159,21 +6159,40 @@ window.attachPostLoginHandlers = function(){
     if(!email){ setMsg('registerMsg','Email is required.','error'); return; }
     if(password.length<6){ setMsg('registerMsg','Password must be at least 6 characters.','error'); return; }
     var btn=this; btn.disabled=true; btn.textContent='CREATING...'; setMsg('registerMsg','','');
-    fbDb.ref('displayNames/'+name).once('value').then(function(snap){
-      if(snap.exists()){ btn.disabled=false; btn.textContent='REGISTER'; setMsg('registerMsg','That display name is already taken.','error'); return Promise.reject({handled:true}); }
-      return fbAuth.createUserWithEmailAndPassword(email,password);
-    }).then(function(cred){
-      var uid=cred.user.uid, now=Date.now(), updates={};
-      updates['users/'+uid+'/email']=email; updates['users/'+uid+'/displayName']=name;
-      updates['users/'+uid+'/status']='pending'; updates['users/'+uid+'/role']='user';
-      updates['users/'+uid+'/joinedAt']=now; updates['displayNames/'+name]=uid;
-      return fbDb.ref().update(updates);
-    }).then(function(){ btn.disabled=false; btn.textContent='REGISTER'; setMsg('registerMsg','Account created! Awaiting admin approval.','success'); })
-    .catch(function(err){
-      if(err&&err.handled) return; btn.disabled=false; btn.textContent='REGISTER';
-      var msg='Registration failed.';
+    // Step 1: Create auth account first (no DB read needed yet)
+    fbAuth.createUserWithEmailAndPassword(email, password).then(function(cred){
+      var uid = cred.user.uid, now = Date.now();
+      // Step 2: Now authenticated — check display name uniqueness
+      return fbDb.ref('displayNames/'+name).once('value').then(function(snap){
+        if(snap.exists() && snap.val() !== uid){
+          // Name taken — delete the just-created auth account and reject
+          return cred.user.delete().then(function(){
+            return Promise.reject({handled:true, msg:'That display name is already taken.'});
+          });
+        }
+        // Step 3: Write user profile
+        var updates = {};
+        updates['users/'+uid+'/email']       = email;
+        updates['users/'+uid+'/displayName'] = name;
+        updates['users/'+uid+'/status']      = 'pending';
+        updates['users/'+uid+'/role']        = 'user';
+        updates['users/'+uid+'/joinedAt']    = now;
+        updates['displayNames/'+name]        = uid;
+        return fbDb.ref().update(updates);
+      });
+    }).then(function(){
+      btn.disabled=false; btn.textContent='REGISTER';
+      setMsg('registerMsg','Account created! Awaiting admin approval.','success');
+      // Sign out — user must wait for approval
+      fbAuth.signOut();
+    }).catch(function(err){
+      btn.disabled=false; btn.textContent='REGISTER';
+      if(err && err.handled){ setMsg('registerMsg', err.msg||'Registration failed.','error'); return; }
+      var msg = 'Registration failed.';
       if(err.code==='auth/email-already-in-use') msg='That email is already registered.';
-      setMsg('registerMsg',msg,'error');
+      if(err.code==='auth/invalid-email')        msg='Invalid email address.';
+      if(err.code==='auth/weak-password')        msg='Password must be at least 6 characters.';
+      setMsg('registerMsg', msg, 'error');
     });
   };
 
