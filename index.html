@@ -6182,9 +6182,12 @@ window.attachPostLoginHandlers = function(){
       });
     }).then(function(){
       btn.disabled=false; btn.textContent='REGISTER';
-      setMsg('registerMsg','Account created! Awaiting admin approval.','success');
-      // Sign out — user must wait for approval
-      fbAuth.signOut();
+      // Sign out then show the pending panel directly
+      fbAuth.signOut().then(function(){
+        authLogin.style.display='none';
+        authRegister.style.display='none';
+        authPending.style.display='block';
+      });
     }).catch(function(err){
       btn.disabled=false; btn.textContent='REGISTER';
       if(err && err.handled){ setMsg('registerMsg', err.msg||'Registration failed.','error'); return; }
