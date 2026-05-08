@@ -1334,9 +1334,9 @@ textarea{resize:vertical;min-height:55px}
 
   <!-- Floating bottom-left buttons (only the buttons, popups are outside map) -->
   <div id="mapFloatingBtns">
-    <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="toggleProfilePopup()">👤</button>
+    <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="event.stopPropagation();toggleProfilePopup()">👤</button>
     <div style="position:relative">
-      <button class="map-float-btn" id="chatFloatBtn" title="Crew Chat" onclick="toggleCrewPopup()">💬
+      <button class="map-float-btn" id="chatFloatBtn" title="Crew Chat" onclick="event.stopPropagation();toggleCrewPopup()">💬
         <div id="chatUnreadDot">0</div>
       </button>
     </div>
@@ -2389,6 +2389,14 @@ function initializeApp(){
   /* -- MAP INIT -- */
   const map=L.map('map',{zoomControl:true,dragging:true,touchZoom:true,doubleClickZoom:true,scrollWheelZoom:true}).setView([23.685,90.3563],7);
   window._mapInstance=map; // for sidebar toggle invalidateSize
+
+  // Stop floating buttons from triggering map clicks on Android
+  var floatBtns = document.getElementById('mapFloatingBtns');
+  if(floatBtns){
+    ['click','touchstart','touchend','touchmove'].forEach(function(evt){
+      floatBtns.addEventListener(evt, function(e){ e.stopPropagation(); }, {passive:false});
+    });
+  }
 
 // --- All tile layers ---
   const normalLayer = L.tileLayer(
@@ -6316,11 +6324,14 @@ window.toggleAreaFeatures = function(){
 /* ====================================================
    PROFILE FLOAT POPUP
 ==================================================== */
-window.toggleProfilePopup = function(){
+window.toggleProfilePopup = function(e){
+  if(e) e.stopPropagation();
   var popup = document.getElementById('profilePopup');
   var isOpen = popup.classList.contains('open');
   // Close crew popup if open
-  document.getElementById('crewSearchPopup').classList.remove('open');
+  var crew = document.getElementById('crewSearchPopup');
+  crew.classList.remove('open');
+  setTimeout(function(){ crew.style.display='none'; },220);
   if(isOpen){ popup.classList.remove('open'); setTimeout(function(){ popup.style.display='none'; },220); }
   else { popup.style.display='block'; requestAnimationFrame(function(){ popup.classList.add('open'); }); }
 };
@@ -6333,7 +6344,8 @@ window.closeProfilePopup = function(){
 /* ====================================================
    CREW CHAT FLOAT POPUP
 ==================================================== */
-window.toggleCrewPopup = function(){
+window.toggleCrewPopup = function(e){
+  if(e) e.stopPropagation();
   var popup = document.getElementById('crewSearchPopup');
   var isOpen = popup.classList.contains('open');
   // Close profile popup if open
@@ -6342,7 +6354,6 @@ window.toggleCrewPopup = function(){
   else {
     popup.style.display='flex';
     requestAnimationFrame(function(){ popup.classList.add('open'); });
-    // Load crew when opening
     if(window._loadCrewPopup) window._loadCrewPopup();
   }
 };
