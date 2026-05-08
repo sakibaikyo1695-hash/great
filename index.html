@@ -27,6 +27,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const fbAuth = firebase.auth();
 const fbDb  = firebase.database();
+// Keep user logged in across app restarts (critical for Android WebView)
+fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
 </script>
 <style>
 /* ======== ROOT VARIABLES ======== */
@@ -514,8 +516,9 @@ textarea{resize:vertical;min-height:55px}
 
 /* ======== PROFILE SLIDE-UP POPUP ======== */
 #profilePopup{
-  position:absolute;bottom:72px;left:14px;z-index:1001;
-  width:280px;
+  position:fixed;bottom:80px;left:14px;z-index:1500;
+  width:calc(100vw - 28px);max-width:300px;
+  pointer-events:none;
   background:var(--bg-panel);
   border:1px solid var(--border-glow);
   border-radius:12px;
@@ -527,7 +530,7 @@ textarea{resize:vertical;min-height:55px}
   transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),opacity 0.22s;
 }
 #profilePopup.open{
-  display:block;transform:translateY(0);opacity:1;
+  display:block;transform:translateY(0);opacity:1;pointer-events:auto;
 }
 #profilePopup .pp-header{
   display:flex;align-items:center;gap:10px;margin-bottom:12px;
@@ -544,18 +547,19 @@ textarea{resize:vertical;min-height:55px}
 
 /* ======== CREW CHAT POPUP (in chatOverlay — already full screen) ======== */
 #crewSearchPopup{
-  position:absolute;bottom:72px;left:72px;z-index:1001;
-  width:300px;max-height:420px;
+  position:fixed;bottom:80px;left:14px;z-index:1500;
+  width:calc(100vw - 28px);max-width:320px;max-height:420px;
   background:var(--bg-panel);
   border:1px solid rgba(0,230,118,0.4);
   border-radius:12px;
   box-shadow:0 8px 32px rgba(0,0,0,0.7),0 0 20px rgba(0,230,118,0.1);
   display:none;flex-direction:column;overflow:hidden;
   transform:translateY(10px);opacity:0;
+  pointer-events:none;
   transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),opacity 0.22s;
 }
 #crewSearchPopup.open{
-  display:flex;transform:translateY(0);opacity:1;
+  display:flex;transform:translateY(0);opacity:1;pointer-events:auto;
 }
 #crewSearchPopup .csp-header{
   display:flex;align-items:center;gap:8px;
@@ -1328,53 +1332,52 @@ textarea{resize:vertical;min-height:55px}
   <button id="measureBtn">📏 MEASURE</button>
   <button id="stopMeasureBtn">⏹ STOP</button>
 
-  <!-- Floating bottom-left buttons -->
+  <!-- Floating bottom-left buttons (only the buttons, popups are outside map) -->
   <div id="mapFloatingBtns">
-    <div style="position:relative">
-      <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="toggleProfilePopup()">👤</button>
-      <!-- Profile slide-up popup -->
-      <div id="profilePopup">
-        <button class="pp-close" onclick="closeProfilePopup()">✖</button>
-        <div class="pp-header">
-          <div class="profile-avatar" id="profileAvatar">?</div>
-          <div>
-            <div class="profile-name-text" id="profileNameDisplay" style="font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-bright);letter-spacing:1px">Loading...</div>
-            <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
-              <div class="profile-online-dot"></div>
-              <span class="profile-role-tag" id="profileRoleTag" style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim)">ONLINE</span>
-            </div>
-          </div>
-        </div>
-        <div class="profile-email-row" id="profileEmailDisplay" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px">—</div>
-        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;font-family:var(--font-display);font-weight:700;margin-bottom:4px">DISPLAY NAME</div>
-        <div class="profile-edit-row" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-          <input type="text" id="profileNameInput" placeholder="New display name" autocomplete="off" style="flex:1;font-size:12px;padding:7px 9px;margin:0">
-          <button class="btn small btn-green" id="profileSaveNameBtn" style="flex-shrink:0;white-space:nowrap">💾</button>
-        </div>
-        <div class="profile-msg" id="profileNameMsg"></div>
-        <button class="btn btn-amber full" id="profileChangePassBtn" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">🔑 CHANGE PASSWORD</button>
-        <div class="profile-msg" id="profilePassMsg"></div>
-        <button class="btn btn-red full" id="profileLogoutBtn" style="font-size:11px;letter-spacing:1px">⏻ SIGN OUT</button>
-      </div>
-    </div>
-
+    <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="toggleProfilePopup()">👤</button>
     <div style="position:relative">
       <button class="map-float-btn" id="chatFloatBtn" title="Crew Chat" onclick="toggleCrewPopup()">💬
         <div id="chatUnreadDot">0</div>
       </button>
-      <!-- Crew search slide-up popup -->
-      <div id="crewSearchPopup">
-        <div class="csp-header">
-          <span class="csp-title">👥 CREW CHAT</span>
-          <span id="crewOnlineCount" style="font-family:var(--font-mono);font-size:10px;color:var(--accent-green);margin-right:6px"></span>
-          <button class="csp-close" onclick="closeCrewPopup()">✖</button>
-        </div>
-        <div class="csp-body">
-          <input type="text" id="crewSearchInput" placeholder="🔍 Search by name or email..." autocomplete="off" style="width:100%;margin-bottom:8px">
-          <div id="crewResults"><div class="crew-empty">Loading crew...</div></div>
-        </div>
+    </div>
+  </div>
+</div>
+
+<!-- Profile slide-up popup (outside map so it never intercepts map touches) -->
+<div id="profilePopup">
+  <button class="pp-close" onclick="closeProfilePopup()">✖</button>
+  <div class="pp-header">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <div>
+      <div class="profile-name-text" id="profileNameDisplay" style="font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-bright);letter-spacing:1px">Loading...</div>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
+        <div class="profile-online-dot"></div>
+        <span class="profile-role-tag" id="profileRoleTag" style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim)">ONLINE</span>
       </div>
     </div>
+  </div>
+  <div class="profile-email-row" id="profileEmailDisplay" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px">—</div>
+  <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;font-family:var(--font-display);font-weight:700;margin-bottom:4px">DISPLAY NAME</div>
+  <div class="profile-edit-row" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+    <input type="text" id="profileNameInput" placeholder="New display name" autocomplete="off" style="flex:1;font-size:12px;padding:7px 9px;margin:0">
+    <button class="btn small btn-green" id="profileSaveNameBtn" style="flex-shrink:0;white-space:nowrap">💾</button>
+  </div>
+  <div class="profile-msg" id="profileNameMsg"></div>
+  <button class="btn btn-amber full" id="profileChangePassBtn" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">🔑 CHANGE PASSWORD</button>
+  <div class="profile-msg" id="profilePassMsg"></div>
+  <button class="btn btn-red full" id="profileLogoutBtn" style="font-size:11px;letter-spacing:1px">⏻ SIGN OUT</button>
+</div>
+
+<!-- Crew search slide-up popup (outside map) -->
+<div id="crewSearchPopup">
+  <div class="csp-header">
+    <span class="csp-title">👥 CREW CHAT</span>
+    <span id="crewOnlineCount" style="font-family:var(--font-mono);font-size:10px;color:var(--accent-green);margin-right:6px"></span>
+    <button class="csp-close" onclick="closeCrewPopup()">✖</button>
+  </div>
+  <div class="csp-body">
+    <input type="text" id="crewSearchInput" placeholder="🔍 Search by name or email..." autocomplete="off" style="width:100%;margin-bottom:8px">
+    <div id="crewResults"><div class="crew-empty">Loading crew...</div></div>
   </div>
 </div>
 
@@ -6597,7 +6600,12 @@ window.closeCrewPopup = function(){
         fbAuth.signOut(); authScreen.classList.remove('hidden'); showPanel('login');
         setMsg('loginMsg','Your account has been suspended. Contact admin.','error');
       } else { authScreen.classList.remove('hidden'); showPanel('pending'); }
-    }).catch(function(){ authScreen.classList.remove('hidden'); showPanel('pending'); });
+    }).catch(function(err){ 
+      // Database read failed — don't show pending, show login with error message
+      authScreen.classList.remove('hidden'); 
+      showPanel('login');
+      setMsg('loginMsg','Connection error. Please try again.','error');
+    });
   });
 
   /* ── ADMIN PANEL ── */
