@@ -6768,30 +6768,55 @@ window.closeCrewPopup = function(){
     }
 
     var _chatHistory = {}; // uid → true if we have a chat thread with them
+    var _chatHistoryListener = null;
 
-    // Load chat history to know who we've talked to
-    function loadChatHistory(){
+    // Start live listener on chats — called right after login so history is always current
+    function startChatHistoryListener(){
       var myUid = window._myUid;
-      if(!myUid) return;
-      fbDb.ref('chats').once('value').then(function(snap){
+      if(!myUid || _chatHistoryListener) return;
+      _chatHistoryListener = fbDb.ref('chats').on('value', function(snap){
         if(!snap.val()) return;
+        var changed = false;
         Object.keys(snap.val()).forEach(function(key){
           var parts = key.split('_');
           if(parts.includes(myUid)){
             var otherUid = parts[0] === myUid ? parts[1] : parts[0];
-            _chatHistory[otherUid] = true;
+            if(!_chatHistory[otherUid]){
+              _chatHistory[otherUid] = true;
+              changed = true;
+            }
           }
         });
-        renderCrew(crewSearch ? crewSearch.value.trim() : '');
+        // Re-render crew list if popup is open and something changed
+        if(changed){
+          var popup = document.getElementById('crewSearchPopup');
+          if(popup && popup.classList.contains('open')){
+            renderCrew(crewSearch ? crewSearch.value.trim() : '');
+          }
+        }
       });
     }
+    window._startChatHistoryListener = startChatHistoryListener;
+
+    // Allow external code (unread watcher) to mark a uid as having chat history
+    window._markChatHistory = function(uid){
+      if(!uid || uid === window._myUid) return;
+      if(!_chatHistory[uid]){
+        _chatHistory[uid] = true;
+        // Re-render if popup is open
+        var popup = document.getElementById('crewSearchPopup');
+        if(popup && popup.classList.contains('open')){
+          renderCrew(crewSearch ? crewSearch.value.trim() : '');
+        }
+      }
+    };
 
     // Load all approved users + listen to their presence
     function loadCrew(){
-      loadChatHistory();
+      startChatHistoryListener(); // ensure listener is running
       fbDb.ref('users').once('value').then(function(snap){
         var users = snap.val() || {};
-        // Detach old listeners
+        // Detach old presence listeners
         Object.keys(_presListeners).forEach(function(uid){
           fbDb.ref('presence/'+uid).off('value', _presListeners[uid]);
         });
@@ -6800,7 +6825,7 @@ window.closeCrewPopup = function(){
 
         Object.keys(users).forEach(function(uid){
           var u = users[uid];
-          if(u.status !== 'approved') return; // only approved crew
+          if(u.status !== 'approved') return;
           _allUsers[uid] = { displayName: u.displayName || u.email || 'Unknown', online: false, lastSeen: null };
 
           // Real-time presence listener
@@ -6875,6 +6900,20 @@ window.closeCrewPopup = function(){
       _myUid = uid;
       startUnreadWatcher();
       cleanOldMessages(uid);
+      // Start live chat history listener immediately so crew list is ready when popup opens
+      if(window._startChatHistoryListener) window._startChatHistoryListener();
+      // Also eagerly load all approved users into _allUsers so names are known for incoming messages
+      fbDb.ref('users').once('value').then(function(snap){
+        var users = snap.val() || {};
+        Object.keys(users).forEach(function(uid2){
+          var u = users[uid2];
+          if(u.status !== 'approved') return;
+          if(!_allUsers[uid2]){
+            _allUsers[uid2] = { displayName: u.displayName || u.email || 'Unknown', online: false, lastSeen: null };
+          }
+        });
+        window._crewAllUsers = _allUsers;
+      });
     };
 
     // ── Auto-delete messages older than 30 days ──────────────────────
@@ -7280,6 +7319,16 @@ window.closeCrewPopup = function(){
       fbDb.ref('unread/' + _myUid).on('value', function(snap){
         var data = snap.val() || {};
         _totalUnread = Object.keys(data).length;
+
+        // Add any new senders to chat history so they appear in the crew popup
+        Object.keys(data).forEach(function(senderUid){
+          if(window._startChatHistoryListener && !window._chatHistoryDirect){
+            // Direct update via unread data
+          }
+          // Directly mark this sender as someone we have history with
+          if(window._markChatHistory) window._markChatHistory(senderUid);
+        });
+
         // Update floating chat button badge
         var dot = document.getElementById('chatUnreadDot');
         if(dot){
@@ -7290,7 +7339,7 @@ window.closeCrewPopup = function(){
             dot.style.display = 'none';
           }
         }
-        // Legacy badge (now hidden but keep for compatibility)
+        // Legacy badge
         var badge = el('crewUnreadBadge');
         if(badge){
           badge.textContent = _totalUnread;
