@@ -1334,9 +1334,9 @@ textarea{resize:vertical;min-height:55px}
 
   <!-- Floating bottom-left buttons (only the buttons, popups are outside map) -->
   <div id="mapFloatingBtns">
-    <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="event.stopPropagation();toggleProfilePopup()">👤</button>
+    <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="event.stopPropagation();event.stopImmediatePropagation();event.preventDefault();toggleProfilePopup(event)">👤</button>
     <div style="position:relative">
-      <button class="map-float-btn" id="chatFloatBtn" title="Crew Chat" onclick="event.stopPropagation();toggleCrewPopup()">💬
+      <button class="map-float-btn" id="chatFloatBtn" title="Crew Chat" onclick="event.stopPropagation();event.stopImmediatePropagation();event.preventDefault();toggleCrewPopup(event)">💬
         <div id="chatUnreadDot">0</div>
       </button>
     </div>
@@ -2390,12 +2390,20 @@ function initializeApp(){
   const map=L.map('map',{zoomControl:true,dragging:true,touchZoom:true,doubleClickZoom:true,scrollWheelZoom:true}).setView([23.685,90.3563],7);
   window._mapInstance=map; // for sidebar toggle invalidateSize
 
-  // Stop floating buttons from triggering map clicks on Android
+  // Stop floating buttons from triggering map clicks — PWA + Android WebView
   var floatBtns = document.getElementById('mapFloatingBtns');
   if(floatBtns){
+    // Standard browser stopPropagation (works in PWA)
     ['click','touchstart','touchend','touchmove'].forEach(function(evt){
       floatBtns.addEventListener(evt, function(e){ e.stopPropagation(); }, {passive:false});
     });
+    // Leaflet-level propagation stop (critical for Android WebView)
+    L.DomEvent.disableClickPropagation(floatBtns);
+    L.DomEvent.disableScrollPropagation(floatBtns);
+    // Also tell Leaflet to ignore this container entirely
+    floatBtns.addEventListener('touchstart', function(e){
+      e.stopImmediatePropagation();
+    }, {passive:false, capture:true});
   }
 
 // --- All tile layers ---
