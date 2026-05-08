@@ -2755,6 +2755,16 @@ function renderWaypointListFiltered(filter){
   ================================================ */
   map.on('click',e=>{
     if(measureActive)return;
+    // Flag-based guard for Android WebView button tap bleed-through
+    if(window._floatBtnJustTapped) return;
+    // Element-based guard against floating button area taps
+    if(e.originalEvent){
+      const touch = e.originalEvent.changedTouches ? e.originalEvent.changedTouches[0] : e.originalEvent;
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      if(el && (el.closest('#mapFloatingBtns') || el.closest('#profilePopup') || el.closest('#crewSearchPopup'))){
+        return;
+      }
+    }
     pendingTapLocation={lat:e.latlng.lat,lon:e.latlng.lng};
     coordsOut.textContent=formatDMS(e.latlng.lat,true)+', '+formatDMS(e.latlng.lng,false);
     const modal=document.getElementById('tapConfirmModal');
@@ -6333,7 +6343,9 @@ window.toggleAreaFeatures = function(){
    PROFILE FLOAT POPUP
 ==================================================== */
 window.toggleProfilePopup = function(e){
-  if(e) e.stopPropagation();
+  if(e){ e.stopPropagation(); e.stopImmediatePropagation(); }
+  window._floatBtnJustTapped = true;
+  setTimeout(function(){ window._floatBtnJustTapped = false; }, 500);
   var popup = document.getElementById('profilePopup');
   var isOpen = popup.classList.contains('open');
   // Close crew popup if open
@@ -6353,7 +6365,9 @@ window.closeProfilePopup = function(){
    CREW CHAT FLOAT POPUP
 ==================================================== */
 window.toggleCrewPopup = function(e){
-  if(e) e.stopPropagation();
+  if(e){ e.stopPropagation(); e.stopImmediatePropagation(); }
+  window._floatBtnJustTapped = true;
+  setTimeout(function(){ window._floatBtnJustTapped = false; }, 500);
   var popup = document.getElementById('crewSearchPopup');
   var isOpen = popup.classList.contains('open');
   // Close profile popup if open
