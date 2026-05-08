@@ -1,7 +1,7 @@
 // Offline support for app shell + map tiles (normal + satellite)
 // Tiles you looked at preflight remain available in the air.
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP_CACHE = `app-${VERSION}`;
 const TILE_CACHE = `tiles-${VERSION}`;
 const SATELLITE_CACHE = `satellite-${VERSION}`;
