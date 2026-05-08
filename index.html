@@ -2455,11 +2455,12 @@ function initializeApp(){
   }
 
   // Sidebar button handlers
-  document.getElementById('mapLayerNormal')   .onclick = () => switchLayer('normal');
-  document.getElementById('mapLayerSatellite').onclick = () => switchLayer('satellite');
-  document.getElementById('mapLayerTopo')     .onclick = () => switchLayer('topo');
-  document.getElementById('mapLayerDark')     .onclick = () => switchLayer('dark');
-  document.getElementById('mapLayerEsriTopo') .onclick = () => switchLayer('esritopo');
+  // Map layer buttons removed from sidebar — kept in JS safely
+  const _mln=document.getElementById('mapLayerNormal');    if(_mln) _mln.onclick=()=>switchLayer('normal');
+  const _mls=document.getElementById('mapLayerSatellite'); if(_mls) _mls.onclick=()=>switchLayer('satellite');
+  const _mlt=document.getElementById('mapLayerTopo');      if(_mlt) _mlt.onclick=()=>switchLayer('topo');
+  const _mld=document.getElementById('mapLayerDark');      if(_mld) _mld.onclick=()=>switchLayer('dark');
+  const _mle=document.getElementById('mapLayerEsriTopo');  if(_mle) _mle.onclick=()=>switchLayer('esritopo');
 
   // Keep the existing map overlay toggle button working (top-left of map)
   const mapToggleBtn = document.getElementById('mapToggleBtn');
