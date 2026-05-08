@@ -27,8 +27,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const fbAuth = firebase.auth();
 const fbDb  = firebase.database();
-// Keep user logged in across app restarts (critical for Android WebView)
-fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
+// Keep user logged in across app restarts
+fbAuth.setPersistence('local').catch(function(){});
 </script>
 <style>
 /* ======== ROOT VARIABLES ======== */
@@ -6601,12 +6601,7 @@ window.closeCrewPopup = function(){
         fbAuth.signOut(); authScreen.classList.remove('hidden'); showPanel('login');
         setMsg('loginMsg','Your account has been suspended. Contact admin.','error');
       } else { authScreen.classList.remove('hidden'); showPanel('pending'); }
-    }).catch(function(err){ 
-      // Database read failed — don't show pending, show login with error message
-      authScreen.classList.remove('hidden'); 
-      showPanel('login');
-      setMsg('loginMsg','Connection error. Please try again.','error');
-    });
+    }).catch(function(){ authScreen.classList.remove('hidden'); showPanel('pending'); });
   });
 
   /* ── ADMIN PANEL ── */
