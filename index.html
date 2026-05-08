@@ -476,10 +476,166 @@ textarea{resize:vertical;min-height:55px}
 }
 #areaVisEmpty{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-align:center;padding:10px 0}
 
-/* ======== RESPONSIVE IPAD — fixed layout works identically, no overrides needed ======== */
-@media (max-width:1024px){
-  /* Sidebar width can be slightly narrower on phones if needed — iPad keeps 340px fine */
+/* ======== FLOATING MAP BUTTONS (bottom-left) ======== */
+#mapFloatingBtns{
+  position:absolute;bottom:24px;left:14px;z-index:1000;
+  display:flex;gap:10px;align-items:flex-end;
 }
+.map-float-btn{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;border:none;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:all 0.2s;box-shadow:0 2px 12px rgba(0,0,0,0.5);
+  flex-shrink:0;
+}
+.map-float-btn:active{transform:scale(0.93);}
+
+#profileFloatBtn{
+  background:linear-gradient(135deg,rgba(0,170,255,0.85),rgba(124,77,255,0.85));
+  border:1.5px solid rgba(0,229,255,0.6);
+  box-shadow:0 2px 14px rgba(0,170,255,0.4);
+}
+#chatFloatBtn{
+  background:linear-gradient(135deg,rgba(0,230,118,0.85),rgba(0,170,255,0.75));
+  border:1.5px solid rgba(0,230,118,0.6);
+  box-shadow:0 2px 14px rgba(0,230,118,0.4);
+  position:relative;
+}
+#chatUnreadDot{
+  position:absolute;top:2px;right:2px;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent-red);color:#fff;
+  font-size:8px;font-weight:700;
+  display:none;align-items:center;justify-content:center;
+  font-family:var(--font-display);
+  border:1.5px solid var(--bg-deep);
+}
+
+/* ======== PROFILE SLIDE-UP POPUP ======== */
+#profilePopup{
+  position:absolute;bottom:72px;left:14px;z-index:1001;
+  width:280px;
+  background:var(--bg-panel);
+  border:1px solid var(--border-glow);
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.7),0 0 20px rgba(0,170,255,0.1);
+  display:none;
+  transform:translateY(10px);
+  opacity:0;
+  transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),opacity 0.22s;
+}
+#profilePopup.open{
+  display:block;transform:translateY(0);opacity:1;
+}
+#profilePopup .pp-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  padding-bottom:10px;border-bottom:1px solid var(--border-dim);
+}
+#profilePopup .pp-close{
+  position:absolute;top:10px;right:10px;
+  background:rgba(255,23,68,0.15);border:1px solid rgba(255,23,68,0.4);
+  color:var(--accent-red);border-radius:6px;
+  padding:3px 8px;font-size:11px;cursor:pointer;
+  font-family:var(--font-display);font-weight:700;
+}
+#profilePopup .pp-close:hover{background:rgba(255,23,68,0.3);}
+
+/* ======== CREW CHAT POPUP (in chatOverlay — already full screen) ======== */
+#crewSearchPopup{
+  position:absolute;bottom:72px;left:72px;z-index:1001;
+  width:300px;max-height:420px;
+  background:var(--bg-panel);
+  border:1px solid rgba(0,230,118,0.4);
+  border-radius:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.7),0 0 20px rgba(0,230,118,0.1);
+  display:none;flex-direction:column;overflow:hidden;
+  transform:translateY(10px);opacity:0;
+  transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),opacity 0.22s;
+}
+#crewSearchPopup.open{
+  display:flex;transform:translateY(0);opacity:1;
+}
+#crewSearchPopup .csp-header{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;background:var(--bg-deep);
+  border-bottom:1px solid var(--border-dim);flex-shrink:0;
+}
+#crewSearchPopup .csp-title{
+  font-family:var(--font-display);font-size:11px;font-weight:700;
+  color:var(--accent-green);letter-spacing:1px;flex:1;
+}
+#crewSearchPopup .csp-close{
+  background:rgba(255,23,68,0.15);border:1px solid rgba(255,23,68,0.4);
+  color:var(--accent-red);border-radius:6px;
+  padding:3px 8px;font-size:11px;cursor:pointer;
+  font-family:var(--font-display);font-weight:700;
+}
+#crewSearchPopup .csp-body{padding:10px 12px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+/* ======== NOTICE POPUP (shown on app open) ======== */
+#noticeOverlay{
+  position:fixed;left:0;top:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.75);z-index:80000;
+  display:none;align-items:center;justify-content:center;
+  padding:16px;backdrop-filter:blur(4px);
+}
+#noticeOverlay.open{display:flex;}
+#noticeBox{
+  background:var(--bg-panel);border:1px solid var(--accent-amber);
+  border-radius:12px;width:100%;max-width:460px;
+  max-height:80vh;overflow-y:auto;padding:20px 18px;
+  box-shadow:0 0 40px rgba(255,171,0,0.2);
+}
+#noticeBox .nb-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+#noticeBox .nb-title{
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  letter-spacing:2px;color:var(--accent-amber);flex:1;
+}
+.notice-card{
+  background:var(--bg-deep);border:1px solid rgba(255,171,0,0.3);
+  border-left:3px solid var(--accent-amber);
+  border-radius:8px;padding:12px 14px;margin-bottom:10px;
+}
+.notice-card:last-child{margin-bottom:0;}
+.notice-card-text{
+  font-family:var(--font-ui);font-size:13px;color:var(--text-primary);
+  line-height:1.7;white-space:pre-wrap;
+}
+.notice-card-time{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-dim);
+  margin-top:6px;letter-spacing:0.5px;
+}
+
+/* ======== ADMIN NOTICE SECTION ======== */
+.admin-notice-card{
+  background:var(--bg-deep);border:1px solid rgba(255,171,0,0.35);
+  border-radius:8px;padding:12px 14px;margin-bottom:8px;
+}
+.admin-notice-card .anc-text{
+  font-family:var(--font-ui);font-size:13px;color:var(--text-primary);
+  line-height:1.6;white-space:pre-wrap;margin-bottom:6px;
+}
+.admin-notice-card .anc-meta{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-dim);
+}
+
+/* ======== PILL BUTTON HOVER STATES ======== */
+#flyingFeaturesBtn:hover{
+  background:linear-gradient(135deg,rgba(0,230,118,0.25),rgba(0,170,255,0.18));
+  box-shadow:0 0 20px rgba(0,230,118,0.3);
+}
+#areaFeaturesBtn:hover{
+  background:linear-gradient(135deg,rgba(124,77,255,0.28),rgba(0,170,255,0.15));
+  box-shadow:0 0 20px rgba(124,77,255,0.3);
+}
+
+/* Anim for profile popup */
+@keyframes slideUpIn{from{transform:translateY(12px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
 
 
 
@@ -1171,6 +1327,55 @@ textarea{resize:vertical;min-height:55px}
   <button id="mapToggleBtn">🛰️ SATELLITE</button>
   <button id="measureBtn">📏 MEASURE</button>
   <button id="stopMeasureBtn">⏹ STOP</button>
+
+  <!-- Floating bottom-left buttons -->
+  <div id="mapFloatingBtns">
+    <div style="position:relative">
+      <button class="map-float-btn" id="profileFloatBtn" title="Profile" onclick="toggleProfilePopup()">👤</button>
+      <!-- Profile slide-up popup -->
+      <div id="profilePopup">
+        <button class="pp-close" onclick="closeProfilePopup()">✖</button>
+        <div class="pp-header">
+          <div class="profile-avatar" id="profileAvatar">?</div>
+          <div>
+            <div class="profile-name-text" id="profileNameDisplay" style="font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-bright);letter-spacing:1px">Loading...</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
+              <div class="profile-online-dot"></div>
+              <span class="profile-role-tag" id="profileRoleTag" style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim)">ONLINE</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-email-row" id="profileEmailDisplay" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px">—</div>
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;font-family:var(--font-display);font-weight:700;margin-bottom:4px">DISPLAY NAME</div>
+        <div class="profile-edit-row" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <input type="text" id="profileNameInput" placeholder="New display name" autocomplete="off" style="flex:1;font-size:12px;padding:7px 9px;margin:0">
+          <button class="btn small btn-green" id="profileSaveNameBtn" style="flex-shrink:0;white-space:nowrap">💾</button>
+        </div>
+        <div class="profile-msg" id="profileNameMsg"></div>
+        <button class="btn btn-amber full" id="profileChangePassBtn" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">🔑 CHANGE PASSWORD</button>
+        <div class="profile-msg" id="profilePassMsg"></div>
+        <button class="btn btn-red full" id="profileLogoutBtn" style="font-size:11px;letter-spacing:1px">⏻ SIGN OUT</button>
+      </div>
+    </div>
+
+    <div style="position:relative">
+      <button class="map-float-btn" id="chatFloatBtn" title="Crew Chat" onclick="toggleCrewPopup()">💬
+        <div id="chatUnreadDot">0</div>
+      </button>
+      <!-- Crew search slide-up popup -->
+      <div id="crewSearchPopup">
+        <div class="csp-header">
+          <span class="csp-title">👥 CREW CHAT</span>
+          <span id="crewOnlineCount" style="font-family:var(--font-mono);font-size:10px;color:var(--accent-green);margin-right:6px"></span>
+          <button class="csp-close" onclick="closeCrewPopup()">✖</button>
+        </div>
+        <div class="csp-body">
+          <input type="text" id="crewSearchInput" placeholder="🔍 Search by name or email..." autocomplete="off" style="width:100%;margin-bottom:8px">
+          <div id="crewResults"><div class="crew-empty">Loading crew...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- SIDEBAR COLLAPSE TOGGLE -->
@@ -1200,61 +1405,8 @@ textarea{resize:vertical;min-height:55px}
     </div>
   </div>
 
-<!-- PROFILE PANEL -->
-<div id="profileSection">
-  <div id="profileToggle">
-    <div class="profile-avatar" id="profileAvatar">?</div>
-    <div class="profile-name-display">
-      <div class="profile-name-text" id="profileNameDisplay">Loading...</div>
-      <div class="profile-status-row">
-        <div class="profile-online-dot"></div>
-        <span class="profile-role-tag" id="profileRoleTag">ONLINE</span>
-      </div>
-    </div>
-    <span id="profileArrow" style="color:var(--text-dim);font-size:10px;flex-shrink:0">▶</span>
-  </div>
-  <div id="profilePanel">
-    <div class="profile-email-row" id="profileEmailDisplay">—</div>
-    <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;font-family:var(--font-display);font-weight:700;margin-bottom:4px">DISPLAY NAME</div>
-    <div class="profile-edit-row">
-      <input type="text" id="profileNameInput" placeholder="New display name" autocomplete="off">
-      <button class="btn small btn-green" id="profileSaveNameBtn" style="flex-shrink:0;white-space:nowrap">💾 SAVE</button>
-    </div>
-    <div class="profile-msg" id="profileNameMsg"></div>
-    <button class="btn btn-amber full" id="profileChangePassBtn" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">🔑 CHANGE PASSWORD</button>
-    <div class="profile-msg" id="profilePassMsg"></div>
-    <button class="btn btn-red full" id="profileLogoutBtn" style="font-size:11px;letter-spacing:1px">⏻ SIGN OUT</button>
-  </div>
-</div>
+<!-- Profile and Crew sections moved to floating map buttons -->
 
-<!-- CREW SECTION -->
-<div id="crewSection">
-  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 6px;cursor:pointer;background:var(--bg-deep);border-top:2px solid var(--accent-green)" id="crewToggle">
-    <span style="font-size:14px">👥</span>
-    <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-bright);letter-spacing:1px;flex:1">CREW</span>
-    <span id="crewUnreadBadge">0</span>
-    <span id="crewOnlineCount" style="font-family:var(--font-mono);font-size:10px;color:var(--accent-green)"></span>
-    <span id="crewArrow" style="color:var(--text-dim);font-size:10px">▶</span>
-  </div>
-  <div id="crewPanel" style="display:none;padding:8px 14px 10px;background:var(--bg-card);">
-    <input type="text" id="crewSearchInput" placeholder="🔍 Search crew by name..." autocomplete="off">
-    <div id="crewResults"><div class="crew-empty">Type a name to search</div></div>
-  </div>
-</div>
-
-<!-- Map Layers -->
-  <div class="section">
-    <div class="section-label">Map Layer</div>
-    <div class="btn-row">
-      <a id="mapLayerNormal"    class="btn btn-green  map-layer-btn active-layer" style="flex:1;font-size:11px">🗺️ NORMAL</a>
-      <a id="mapLayerSatellite" class="btn btn-blue   map-layer-btn"              style="flex:1;font-size:11px">🛰️ SAT</a>
-    </div>
-    <div class="btn-row" style="margin-top:2px">
-      <a id="mapLayerTopo"      class="btn btn-amber  map-layer-btn"              style="flex:1;font-size:11px">⛰️ TOPO</a>
-      <a id="mapLayerDark"      class="btn btn-purple map-layer-btn"              style="flex:1;font-size:11px">🌑 DARK</a>
-      <a id="mapLayerEsriTopo"  class="btn btn-teal   map-layer-btn"              style="flex:1;font-size:11px">🗾 ESRI</a>
-    </div>
-  </div>
   <!-- Jump to Coordinates -->
   <div class="section">
     <div class="section-label">Jump to Coordinates</div>
@@ -1292,72 +1444,87 @@ textarea{resize:vertical;min-height:55px}
     <div id="routeSummary"></div>
   </div>
 
-  <!-- Flying Modes -->
-  <div class="section">
-    <div class="section-label">Flying / Direct-To Modes</div>
-    <div class="btn-row">
-      <a id="startFlyBtn" class="btn btn-green">🚁 FLY ON</a>
-      <a id="stopFlyBtn" class="btn btn-red">⏹ FLY OFF</a>
-    </div>
-    <div class="btn-row">
-      <a id="startDirectBtn" class="btn btn-purple">➤ DIRECT-TO</a>
-      <a id="stopDirectBtn" class="btn btn-red">⏹ STOP</a>
-    </div>
-    <a id="recenterBtn" class="btn btn-green full">🎯 RE-CENTER MAP</a>
-    <div id="gpsInfo">
-      <div class="gps-row"><span class="gps-label">GPS SPEED</span><span class="gps-value" id="gpsSpeed">-- kts</span></div>
-      <div class="gps-row"><span class="gps-label">COURSE OG</span><span class="gps-value" id="gpsCourse">--°</span></div>
-    </div>
-  </div>
-
-  <!-- Moving Track -->
-  <div class="section">
-    <div class="section-label">Moving Track <span style="font-size:9px;color:var(--text-dim)">(FLYING MODE)</span></div>
-    <div class="btn-row">
-      <a id="movingTrackOnBtn" class="btn btn-green">📡 TRACK ON</a>
-      <a id="movingTrackOffBtn" class="btn" style="background:rgba(255,87,34,0.12);border-color:rgba(255,87,34,0.4);color:#ff5722">📡 TRACK OFF</a>
-    </div>
-    <div id="movingTrackInfo">
-      <div class="track-row"><span class="track-label">20-MIN TRACK</span><span class="track-value" id="trackDistance">-- NM</span></div>
-      <div class="track-row"><span class="track-label">COURSE</span><span class="track-value" id="trackCourse">--°</span></div>
-      <div class="track-row"><span class="track-label">SPEED</span><span class="track-value" id="trackSpeed">-- kts</span></div>
-    </div>
-  </div>
-
-  <!-- Direct-To Select -->
-  <div class="section">
-    <div class="section-label">Direct-To Waypoint</div>
-    <select id="directSelect"><option value="">Select Waypoint</option></select>
-  </div>
-
-  <!-- Area Management -->
-  <div class="section">
-    <div class="section-label">
-      Area Management
-      <a id="showAreaListBtn" class="btn small btn-blue" style="margin-left:auto">📋 LIST</a>
-    </div>
-    <a id="createAreaBtn" class="btn btn-purple full">✚ CREATE AREA</a>
-    <div style="margin-top:8px">
-      <div class="c-label" style="margin-bottom:4px">EDIT AREA</div>
-      <select id="editAreaSelect"><option value="">Select Area to Edit</option></select>
-      <a id="editAreaBtn" class="btn btn-amber full" style="margin-top:4px">✏️ EDIT SELECTED</a>
-    </div>
-    <div style="margin-top:8px">
-      <div class="c-label" style="margin-bottom:4px">DELETE AREA</div>
-      <select id="deleteAreaSelect"><option value="">Select Area to Delete</option></select>
-      <a id="deleteAreaBtn" class="btn btn-red full" style="margin-top:4px">🗑 DELETE SELECTED</a>
+  <!-- FLYING FEATURES — pill/card collapsible -->
+  <div class="section" style="padding:10px 14px">
+    <button id="flyingFeaturesBtn" onclick="toggleFlyingFeatures()" style="
+      width:100%;display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(0,170,255,0.12));
+      border:1.5px solid rgba(0,230,118,0.5);border-radius:24px;
+      padding:11px 18px;cursor:pointer;
+      font-family:var(--font-display);font-size:12px;font-weight:700;
+      letter-spacing:1.5px;color:var(--accent-green);
+      box-shadow:0 0 14px rgba(0,230,118,0.18);
+      transition:all 0.2s;-webkit-user-select:none;user-select:none;">
+      <span>🚁 FLYING FEATURES</span>
+      <span id="flyingFeaturesArrow" style="font-size:11px;transition:transform 0.25s">▼</span>
+    </button>
+    <div id="flyingFeaturesPanel" style="display:none;margin-top:8px;padding:8px 4px 2px">
+      <div class="btn-row">
+        <a id="startFlyBtn" class="btn btn-green">🚁 FLY ON</a>
+        <a id="stopFlyBtn" class="btn btn-red">⏹ FLY OFF</a>
+      </div>
+      <div class="btn-row">
+        <a id="startDirectBtn" class="btn btn-purple">➤ DIRECT-TO</a>
+        <a id="stopDirectBtn" class="btn btn-red">⏹ STOP</a>
+      </div>
+      <a id="recenterBtn" class="btn btn-green full">🎯 RE-CENTER MAP</a>
+      <div id="gpsInfo">
+        <div class="gps-row"><span class="gps-label">GPS SPEED</span><span class="gps-value" id="gpsSpeed">-- kts</span></div>
+        <div class="gps-row"><span class="gps-label">COURSE OG</span><span class="gps-value" id="gpsCourse">--°</span></div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-dim)">
+        <div class="btn-row">
+          <a id="movingTrackOnBtn" class="btn btn-green">📡 TRACK ON</a>
+          <a id="movingTrackOffBtn" class="btn" style="background:rgba(255,87,34,0.12);border-color:rgba(255,87,34,0.4);color:#ff5722">📡 TRACK OFF</a>
+        </div>
+        <div id="movingTrackInfo">
+          <div class="track-row"><span class="track-label">20-MIN TRACK</span><span class="track-value" id="trackDistance">-- NM</span></div>
+          <div class="track-row"><span class="track-label">COURSE</span><span class="track-value" id="trackCourse">--°</span></div>
+          <div class="track-row"><span class="track-label">SPEED</span><span class="track-value" id="trackSpeed">-- kts</span></div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-dim)">
+        <div class="c-label" style="margin-bottom:4px">DIRECT-TO WAYPOINT</div>
+        <select id="directSelect"><option value="">Select Waypoint</option></select>
+      </div>
     </div>
   </div>
 
-<!-- Area Visibility (Show / Hide on map) -->
-  <div class="section">
-    <div class="section-label" id="areaVisToggle" style="cursor:pointer;user-select:none">
-      Show / Hide Areas
-      <span id="areaVisArrow" style="margin-left:auto;color:var(--accent-cyan);font-size:11px">▶ EXPAND</span>
-    </div>
-    <div id="areaVisPanel" style="display:none;margin-top:4px">
-      <div id="areaVisList">
-        <div id="areaVisEmpty">No areas saved yet</div>
+  <!-- AREA — pill/card collapsible -->
+  <div class="section" style="padding:10px 14px">
+    <button id="areaFeaturesBtn" onclick="toggleAreaFeatures()" style="
+      width:100%;display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(135deg,rgba(124,77,255,0.18),rgba(0,170,255,0.10));
+      border:1.5px solid rgba(124,77,255,0.55);border-radius:24px;
+      padding:11px 18px;cursor:pointer;
+      font-family:var(--font-display);font-size:12px;font-weight:700;
+      letter-spacing:1.5px;color:#b39ddb;
+      box-shadow:0 0 14px rgba(124,77,255,0.18);
+      transition:all 0.2s;-webkit-user-select:none;user-select:none;">
+      <span>📐 AREA</span>
+      <span id="areaFeaturesArrow" style="font-size:11px;transition:transform 0.25s">▼</span>
+    </button>
+    <div id="areaFeaturesPanel" style="display:none;margin-top:8px;padding:8px 4px 2px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-family:var(--font-display);font-size:9px;letter-spacing:2px;color:var(--text-dim)">AREA MANAGEMENT</span>
+        <a id="showAreaListBtn" class="btn small btn-blue">📋 LIST</a>
+      </div>
+      <a id="createAreaBtn" class="btn btn-purple full">✚ CREATE AREA</a>
+      <div style="margin-top:8px">
+        <div class="c-label" style="margin-bottom:4px">EDIT AREA</div>
+        <select id="editAreaSelect"><option value="">Select Area to Edit</option></select>
+        <a id="editAreaBtn" class="btn btn-amber full" style="margin-top:4px">✏️ EDIT SELECTED</a>
+      </div>
+      <div style="margin-top:8px">
+        <div class="c-label" style="margin-bottom:4px">DELETE AREA</div>
+        <select id="deleteAreaSelect"><option value="">Select Area to Delete</option></select>
+        <a id="deleteAreaBtn" class="btn btn-red full" style="margin-top:4px">🗑 DELETE SELECTED</a>
+      </div>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border-dim)">
+        <div style="font-family:var(--font-display);font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">SHOW / HIDE AREAS</div>
+        <div id="areaVisList">
+          <div id="areaVisEmpty">No areas saved yet</div>
+        </div>
       </div>
     </div>
   </div>
@@ -2051,6 +2218,18 @@ textarea{resize:vertical;min-height:55px}
     </div>
   </div>
 </div>
+<!-- NOTICE OVERLAY -->
+<div id="noticeOverlay">
+  <div id="noticeBox">
+    <div class="nb-header">
+      <span style="font-size:20px">📢</span>
+      <span class="nb-title">NOTICE BOARD</span>
+    </div>
+    <div id="noticeList"></div>
+    <button class="btn btn-green full" style="margin-top:14px;font-family:var(--font-display);font-size:12px;letter-spacing:1.5px" onclick="document.getElementById('noticeOverlay').classList.remove('open')">✅ ACKNOWLEDGED — CLOSE</button>
+  </div>
+</div>
+
 <!-- AUTH SCREEN -->
 <div id="authScreen">
   <div class="auth-box">
@@ -2092,6 +2271,15 @@ textarea{resize:vertical;min-height:55px}
     <button class="btn small btn-red" id="closeAdminPanelBtn">✖ CLOSE</button>
   </div>
   <div id="adminUserList"><div class="admin-loading">Loading users...</div></div>
+
+  <!-- POST NOTICE SECTION -->
+  <div style="padding:14px;border-top:2px solid var(--accent-amber);background:var(--bg-deep)">
+    <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent-amber);margin-bottom:10px">📢 POST NOTICE</div>
+    <textarea id="adminNoticeInput" rows="3" placeholder="Type your notice here... (visible to all users on app open)" style="width:100%;margin-bottom:8px;font-size:13px"></textarea>
+    <button class="btn btn-amber full" id="adminPostNoticeBtn" style="font-family:var(--font-display);font-size:11px;letter-spacing:1.5px;margin-bottom:14px">📤 POST NOTICE</button>
+    <div style="font-family:var(--font-display);font-size:10px;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">ACTIVE NOTICES</div>
+    <div id="adminNoticeList"><div class="admin-loading" style="font-size:11px">Loading notices...</div></div>
+  </div>
 </div>
 
 <!-- INSECURE OVERLAY -->
@@ -6091,13 +6279,6 @@ window.attachPostLoginHandlers = function(){
     panel.style.display=open?'none':'block';
     arrow.textContent=open?'▶ EXPAND':'▼ COLLAPSE';
   };
-  document.getElementById('areaVisToggle').onclick=function(){
-    const panel=document.getElementById('areaVisPanel');
-    const arrow=document.getElementById('areaVisArrow');
-    const open=panel.style.display==='block';
-    panel.style.display=open?'none':'block';
-    arrow.textContent=open?'▶ EXPAND':'▼ COLLAPSE';
-  };
   document.getElementById('userGuideBtn').onclick=function(){
     document.getElementById('userGuideModal').style.display='block';
   };
@@ -6105,6 +6286,140 @@ window.attachPostLoginHandlers = function(){
     document.getElementById('userGuideModal').style.display='none';
   };
 };
+
+/* ====================================================
+   PILL BUTTON TOGGLE — FLYING FEATURES
+==================================================== */
+window.toggleFlyingFeatures = function(){
+  var panel = document.getElementById('flyingFeaturesPanel');
+  var arrow = document.getElementById('flyingFeaturesArrow');
+  var open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
+};
+
+/* ====================================================
+   PILL BUTTON TOGGLE — AREA FEATURES
+==================================================== */
+window.toggleAreaFeatures = function(){
+  var panel = document.getElementById('areaFeaturesPanel');
+  var arrow = document.getElementById('areaFeaturesArrow');
+  var open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
+};
+
+/* ====================================================
+   PROFILE FLOAT POPUP
+==================================================== */
+window.toggleProfilePopup = function(){
+  var popup = document.getElementById('profilePopup');
+  var isOpen = popup.classList.contains('open');
+  // Close crew popup if open
+  document.getElementById('crewSearchPopup').classList.remove('open');
+  if(isOpen){ popup.classList.remove('open'); setTimeout(function(){ popup.style.display='none'; },220); }
+  else { popup.style.display='block'; requestAnimationFrame(function(){ popup.classList.add('open'); }); }
+};
+window.closeProfilePopup = function(){
+  var popup = document.getElementById('profilePopup');
+  popup.classList.remove('open');
+  setTimeout(function(){ popup.style.display='none'; },220);
+};
+
+/* ====================================================
+   CREW CHAT FLOAT POPUP
+==================================================== */
+window.toggleCrewPopup = function(){
+  var popup = document.getElementById('crewSearchPopup');
+  var isOpen = popup.classList.contains('open');
+  // Close profile popup if open
+  closeProfilePopup();
+  if(isOpen){ popup.classList.remove('open'); setTimeout(function(){ popup.style.display='none'; },220); }
+  else {
+    popup.style.display='flex';
+    requestAnimationFrame(function(){ popup.classList.add('open'); });
+    // Load crew when opening
+    if(window._loadCrewPopup) window._loadCrewPopup();
+  }
+};
+window.closeCrewPopup = function(){
+  var popup = document.getElementById('crewSearchPopup');
+  popup.classList.remove('open');
+  setTimeout(function(){ popup.style.display='none'; },220);
+};
+
+/* ====================================================
+   NOTICE SYSTEM (Firebase: notices/)
+==================================================== */
+(function(){
+  // Load and show notices on app start (called after login)
+  window._loadAndShowNotices = function(){
+    fbDb.ref('notices').orderByChild('createdAt').once('value').then(function(snap){
+      var notices = [];
+      snap.forEach(function(child){ notices.push(Object.assign({key:child.key},child.val())); });
+      if(!notices.length) return;
+      var list = document.getElementById('noticeList');
+      if(!list) return;
+      list.innerHTML = '';
+      notices.slice().reverse().forEach(function(n){
+        var card = document.createElement('div'); card.className='notice-card';
+        var dt = n.createdAt ? new Date(n.createdAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+        card.innerHTML = '<div class="notice-card-text">'+escHtml(n.text)+'</div><div class="notice-card-time">'+dt+'</div>';
+        list.appendChild(card);
+      });
+      document.getElementById('noticeOverlay').classList.add('open');
+    });
+  };
+
+  function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Admin: load notices list
+  window._loadAdminNotices = function(){
+    var container = document.getElementById('adminNoticeList');
+    if(!container) return;
+    container.innerHTML = '<div class="admin-loading" style="font-size:11px">Loading...</div>';
+    fbDb.ref('notices').orderByChild('createdAt').once('value').then(function(snap){
+      var notices = [];
+      snap.forEach(function(child){ notices.push(Object.assign({key:child.key},child.val())); });
+      container.innerHTML = '';
+      if(!notices.length){ container.innerHTML='<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding:8px 0">No notices posted yet.</div>'; return; }
+      notices.slice().reverse().forEach(function(n){
+        var card = document.createElement('div'); card.className='admin-notice-card';
+        var dt = n.createdAt ? new Date(n.createdAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+        card.innerHTML =
+          '<div class="anc-text">'+escHtml(n.text)+'</div>'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">'+
+            '<div class="anc-meta">'+dt+'</div>'+
+            '<button class="btn small btn-red" onclick="window._deleteNotice(\''+n.key+'\')">🗑 DELETE</button>'+
+          '</div>';
+        container.appendChild(card);
+      });
+    });
+  };
+
+  window._deleteNotice = function(key){
+    if(!confirm('Delete this notice?')) return;
+    fbDb.ref('notices/'+key).remove().then(function(){ window._loadAdminNotices(); });
+  };
+
+  // Post notice button
+  document.addEventListener('DOMContentLoaded',function(){});
+  // Wire up post button (called after DOM ready, inside admin panel)
+  window._wireAdminNoticeBtn = function(){
+    var btn = document.getElementById('adminPostNoticeBtn');
+    if(!btn||btn._wired) return; btn._wired=true;
+    btn.onclick = function(){
+      var text = (document.getElementById('adminNoticeInput').value||'').trim();
+      if(!text){ alert('Please enter notice text.'); return; }
+      btn.disabled=true; btn.textContent='Posting...';
+      fbDb.ref('notices').push({ text:text, createdAt: firebase.database.ServerValue.TIMESTAMP }).then(function(){
+        document.getElementById('adminNoticeInput').value='';
+        btn.disabled=false; btn.textContent='📤 POST NOTICE';
+        window._loadAdminNotices();
+      }).catch(function(e){ btn.disabled=false; btn.textContent='📤 POST NOTICE'; alert('Error: '+e.message); });
+    };
+  };
+})();
   // ---- SPLASH SCREEN LOGIC ----
 (function(){
   const SPLASH_KEY = 'airnav_splash_seen';
@@ -6276,6 +6591,8 @@ window.attachPostLoginHandlers = function(){
         // Set chat user
         if(window._setChatUser) window._setChatUser(user.uid);
         if(!window._appInitialized){ window._appInitialized=true; initializeApp(); }
+        // Load notices for this user
+        setTimeout(function(){ if(window._loadAndShowNotices) window._loadAndShowNotices(); }, 800);
       } else if(data.status==='banned'){
         fbAuth.signOut(); authScreen.classList.remove('hidden'); showPanel('login');
         setMsg('loginMsg','Your account has been suspended. Contact admin.','error');
@@ -6285,7 +6602,7 @@ window.attachPostLoginHandlers = function(){
 
   /* ── ADMIN PANEL ── */
   var adminPanel=document.getElementById('adminPanel');
-  document.getElementById('openAdminPanelBtn').onclick=function(){ adminPanel.classList.add('open'); loadAdminUsers(); };
+  document.getElementById('openAdminPanelBtn').onclick=function(){ adminPanel.classList.add('open'); loadAdminUsers(); if(window._loadAdminNotices) window._loadAdminNotices(); if(window._wireAdminNoticeBtn) window._wireAdminNoticeBtn(); };
   document.getElementById('closeAdminPanelBtn').onclick=function(){ adminPanel.classList.remove('open'); };
 
   function loadAdminUsers(){
@@ -6330,22 +6647,14 @@ window.attachPostLoginHandlers = function(){
 
   /* ── CREW PANEL ── */
   (function(){
-    var crewToggle   = document.getElementById('crewToggle');
-    var crewPanel    = document.getElementById('crewPanel');
-    var crewArrow    = document.getElementById('crewArrow');
     var crewSearch   = document.getElementById('crewSearchInput');
     var crewResults  = document.getElementById('crewResults');
     var crewCount    = document.getElementById('crewOnlineCount');
     var _allUsers    = {};   // uid → {displayName, online, lastSeen}
     var _presListeners = {}; // uid → listener ref
 
-    // Toggle open/close
-    crewToggle.onclick = function(){
-      var open = crewPanel.style.display === 'block';
-      crewPanel.style.display = open ? 'none' : 'block';
-      crewArrow.textContent   = open ? '▶' : '▼';
-      if(!open){ loadCrew(); crewSearch.focus(); }
-    };
+    // Expose load function for float popup
+    window._loadCrewPopup = function(){ loadCrew(); if(crewSearch) crewSearch.focus(); };
 
     // Format last seen
     function fmtSeen(ts){
@@ -6357,18 +6666,43 @@ window.attachPostLoginHandlers = function(){
       return Math.floor(diff/86400) + 'd ago';
     }
 
-    // Render results list
+    // Render results list — WhatsApp style: show chat history, search for anyone
     function renderCrew(filter){
       crewResults.innerHTML = '';
+      var myUid = window._myUid || null;
       var keys = Object.keys(_allUsers);
-      if(filter) keys = keys.filter(function(uid){
-        return _allUsers[uid].displayName.toLowerCase().includes(filter.toLowerCase());
-      });
-      if(keys.length === 0){
-        crewResults.innerHTML = '<div class="crew-empty">' + (filter ? 'No crew found' : 'No crew loaded yet') + '</div>';
-        return;
+
+      if(filter){
+        // Search mode: show anyone matching
+        keys = keys.filter(function(uid){
+          if(uid === myUid) return false;
+          var u = _allUsers[uid];
+          var searchStr = ((u.displayName||'') + ' ' + (u.email||'')).toLowerCase();
+          return searchStr.includes(filter.toLowerCase());
+        });
+        if(keys.length === 0){
+          crewResults.innerHTML = '<div class="crew-empty">No crew found for "'+filter+'"</div>';
+          return;
+        }
+      } else {
+        // Default: show only people you have chats with (chat history)
+        var chattedKeys = keys.filter(function(uid){
+          if(uid === myUid) return false;
+          return _chatHistory[uid] === true;
+        });
+        if(chattedKeys.length === 0){
+          crewResults.innerHTML = '<div class="crew-empty" style="text-align:center;padding:16px 8px">' +
+            '<div style="font-size:20px;margin-bottom:6px">💬</div>' +
+            '<div style="margin-bottom:4px">No conversations yet</div>' +
+            '<div style="font-size:10px;color:var(--text-dim)">Search by name or email to start chatting</div>' +
+            '</div>';
+          return;
+        }
+        keys = chattedKeys;
       }
+
       // Sort: online first, then alphabetical
+      keys = keys.filter(function(uid){ return uid !== myUid; });
       keys.sort(function(a,b){
         var ua = _allUsers[a], ub = _allUsers[b];
         if(ua.online && !ub.online) return -1;
@@ -6385,16 +6719,39 @@ window.attachPostLoginHandlers = function(){
           '<div class="crew-item-status">' + (u.online ? '● ONLINE' : fmtSeen(u.lastSeen)) + '</div>' +
           '<span style="font-size:10px;color:var(--accent-cyan);font-family:var(--font-mono);margin-left:4px">💬</span>';
         item.style.cursor = 'pointer';
-        (function(capturedUid){ item.onclick = function(){ openChat(capturedUid); }; })(uid);
+        (function(capturedUid){ item.onclick = function(){ openChat(capturedUid); closeCrewPopup(); }; })(uid);
         crewResults.appendChild(item);
       });
       // Update online count badge
-      var onlineCount = keys.filter(function(uid){ return _allUsers[uid].online; }).length;
+      var onlineCount = Object.keys(_allUsers).filter(function(uid){ return _allUsers[uid].online && uid !== myUid; }).length;
       crewCount.textContent = onlineCount > 0 ? onlineCount + ' online' : '';
+      // Update float button badge
+      var dot = document.getElementById('chatUnreadDot');
+      if(dot){ /* managed by unread watcher */ }
+    }
+
+    var _chatHistory = {}; // uid → true if we have a chat thread with them
+
+    // Load chat history to know who we've talked to
+    function loadChatHistory(){
+      var myUid = window._myUid;
+      if(!myUid) return;
+      fbDb.ref('chats').once('value').then(function(snap){
+        if(!snap.val()) return;
+        Object.keys(snap.val()).forEach(function(key){
+          var parts = key.split('_');
+          if(parts.includes(myUid)){
+            var otherUid = parts[0] === myUid ? parts[1] : parts[0];
+            _chatHistory[otherUid] = true;
+          }
+        });
+        renderCrew(crewSearch ? crewSearch.value.trim() : '');
+      });
     }
 
     // Load all approved users + listen to their presence
     function loadCrew(){
+      loadChatHistory();
       fbDb.ref('users').once('value').then(function(snap){
         var users = snap.val() || {};
         // Detach old listeners
@@ -6886,13 +7243,21 @@ window.attachPostLoginHandlers = function(){
       fbDb.ref('unread/' + _myUid).on('value', function(snap){
         var data = snap.val() || {};
         _totalUnread = Object.keys(data).length;
+        // Update floating chat button badge
+        var dot = document.getElementById('chatUnreadDot');
+        if(dot){
+          if(_totalUnread > 0){
+            dot.textContent = _totalUnread;
+            dot.style.display = 'flex';
+          } else {
+            dot.style.display = 'none';
+          }
+        }
+        // Legacy badge (now hidden but keep for compatibility)
         var badge = el('crewUnreadBadge');
-        if(!badge) return;
-        if(_totalUnread > 0){
+        if(badge){
           badge.textContent = _totalUnread;
-          badge.style.display = 'inline-block';
-        } else {
-          badge.style.display = 'none';
+          badge.style.display = _totalUnread > 0 ? 'inline-block' : 'none';
         }
       });
     }
@@ -6901,19 +7266,10 @@ window.attachPostLoginHandlers = function(){
 
   /* ── PROFILE PANEL ── */
   (function(){
-    var profileToggle=document.getElementById('profileToggle');
-    var profilePanel=document.getElementById('profilePanel');
-    var profileArrow=document.getElementById('profileArrow');
     var profileNameMsg=document.getElementById('profileNameMsg');
     var profilePassMsg=document.getElementById('profilePassMsg');
 
-    function setProfileMsg(el,text,type){ el.textContent=text; el.className='profile-msg'+(type?' '+type:''); }
-
-    profileToggle.onclick=function(){
-      var open=profilePanel.style.display==='block';
-      profilePanel.style.display=open?'none':'block';
-      profileArrow.textContent=open?'▶':'▼';
-    };
+    function setProfileMsg(el,text,type){ if(!el) return; el.textContent=text; el.className='profile-msg'+(type?' '+type:''); }
 
     document.getElementById('profileSaveNameBtn').onclick=function(){
       var newName=document.getElementById('profileNameInput').value.trim();
